@@ -17,19 +17,35 @@ from selenium.webdriver.firefox.webdriver import WebDriver
 import os
 import re
 import time
-import app_config
+from App_Configs import App_Configs
+from Save_State import Save_State
 
 
 class Creator:
 
-    config_varz = app_config.AppConfigSingleton(".env_config_local")
+    # config_varz = AppConfigSingleton.AppConfigSingleton(".env_config_local")
+    # config_varz = AppConfigSingleton.AppConfigSingleton()
+    # App_Configs.
+    
+    cookie_COPPA = {
+        'name': 'needCOPPA',
+        'value': 'false',
+        'domain': '.webtoons.com'
+    }
     
     def __init__(self, driver: WebDriver, **kwargs):
-        self.driver = driver
-        self.email = self.config_varz.EMAIL
-        self.pw = self.config_varz.PWORD
-        self.create_start = self.config_varz.CREATE_BOT_START
-        self.create_end_before = self.config_varz.CREATE_BOT_END_BEFORE
+        self.driver             = driver
+        self.email              = App_Configs.EMAIL
+        self.pw                 = App_Configs.PWORD
+        self.create_start       = App_Configs.CREATE_BOT_START
+        self.create_end_before  = App_Configs.CREATE_BOT_END_BEFORE
+
+    def load_state(self):
+        self.email              = Save_State.EMAIL
+        self.pw                 = Save_State.PWORD
+        self.create_start       = Save_State.CREATE_BOT_START
+        self.create_end_before  = Save_State.CREATE_BOT_END_BEFORE
+
 
     def run(self):
         for i in range (self.create_start, self.create_end_before):
@@ -48,6 +64,7 @@ class Creator:
         email_w_count = f"{username}+fsxx{count}@{domain}" # supergera_12@gmail.com
 
         self.driver.get(login_url)
+        self.driver.add_cookie(self.cookie_COPPA)
         time.sleep(2)
 
         email_clickable         = self.driver.find_element(By.ID, "email")

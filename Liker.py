@@ -21,11 +21,18 @@ from selenium.webdriver.support import expected_conditions as EC
 import os
 import re
 import time
-import app_config
+from App_Configs import App_Configs
 
 class Liker:
 
-    config_varz = app_config.AppConfigSingleton(".env_config_local")
+    # config_varz = AppConfigSingleton.AppConfigSingleton(".env_config_local")
+    # config_varz = App_Configs.AppConfigSingleton()
+
+    cookie_COPPA = {
+        'name': 'needCOPPA',
+        'value': 'false',
+        'domain': '.webtoons.com'
+    }
 
     def __init__(self, driver: WebDriver, **kwargs):
         # Set default values
@@ -34,40 +41,23 @@ class Liker:
         self.age = kwargs.get('age', None)
         self.country = kwargs.get('country', 'Unknown')
 
-        self.email = self.config_varz.EMAIL
-        self.pw = self.config_varz.PWORD
-        self.like_start = self.config_varz.LIKE_BOT_START
-        self.like_end_before = self.config_varz.LIKE_BOT_END_BEFORE
+        self.email              = App_Configs.EMAIL
+        self.pw                 = App_Configs.PWORD
+        self.like_start         = App_Configs.LIKE_BOT_START
+        self.like_end_before    = App_Configs.LIKE_BOT_END_BEFORE
 
         self.page_urls: List[str] = self.config_varz.LIKE_PAGES
 
-        # You can also dynamically set attributes based on kwargs
-        # for key, value in kwargs.items():
-        #     setattr(self, key, value)
-
-    
-    # https://www.webtoons.com/en/romance/the-dragon-kings-bride/episode-35/viewer?title_no=5517&episode_no=35,
-    # https://www.webtoons.com/en/romance/the-dragon-kings-bride/episode-36/viewer?title_no=5517&episode_no=36,
     def run(self):
         for i in range (self.like_start, self.like_end_before):
             print(f'---------{i}--------')
             self.do_login(i)
             for page in self.page_urls:
-                print(page)
+                print("Liking: ", page)
                 self.send_like(page)
-            self.pre_login()
-        # self.driver.get("https://www.webtoons.com/member/login")
-        print("DOOOOOOOOOOOOOOONE")
-        print("DOOOOOOOOOOOOOOONE")
+            self.driver.delete_all_cookies()
+        print("DONE!")
 
-    def pre_login(self):
-        self.driver.delete_all_cookies()
-        cookie_COPPA = {
-            'name': 'needCOPPA',
-            'value': 'false',
-            'domain': '.webtoons.com'
-        }
-        self.driver.add_cookie(cookie_COPPA)
 
     def do_login(self, count):
         # login_page = "https://www.webtoons.com/member/login?returnUrl=/"
@@ -78,10 +68,8 @@ class Liker:
 
         email_w_count = f"{username}+fsxx{count}@{domain}" # supergera+12@gmail.com
 
-
-        print('going to login page')
         self.driver.get(login_page)
-        print('AT login page')
+        self.driver.add_cookie(self.cookie_COPPA)
 
         # 1 Wait for client render -.-
         login_email_btn_wait = EC.presence_of_element_located((By.CSS_SELECTOR, "._btnLoginEmail"))
@@ -108,27 +96,16 @@ class Liker:
             .click(password_clickable).send_keys(self.pw) \
             .click(submit_clickable) \
             .perform()
+
+        print("LOGIN COMPLETE: ", email_w_count)
         time.sleep(1)
 
     def send_like(self, page_url):
-        print('about to send likes!!! to:', page_url)
-        time.sleep(10)
-        cookiez: List[dict] = self.driver.get_cookies()
-        print("COOKIEz send likes !!!!!")
-        for cook in cookiez:
-            print(cook)
-            # if cook['name'] != 'needCOPPA':
-            #     print('deleting', cook['name'])
-            #     self.driver.delete_cookie(cook['name'])
-            print()
-
-
         timeout = 10
         self.driver.get(page_url)
-        print('WE ARRIVED AT??:', page_url)
         self.driver.execute_script("""        
             let like = document.getElementById("likeItButton")
-            like.scrollIntoView({ block: "center"}); 
+            like.scrollIntoView({ block: "start"}); 
         """)
 
         # Wait -.-

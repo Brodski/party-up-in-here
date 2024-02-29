@@ -1,0 +1,20 @@
+initialization:
+  SELENIUM_IS_HEADLESS: 'False'
+  ENV: local
+  EMAIL: itsjustbeenrevoked123@gmail.com
+  PWORD: TEST@123
+  CREATE_BOT_START: 0
+  CREATE_BOT_END_BEFORE: 3
+  LIKE_BOT_START: 0
+  LIKE_BOT_END_BEFORE: 3
+  LIKE_PAGES:
+  - https://www.webtoons.com/en/romance/the-dragon-kings-bride/episode-34/viewer?title_no=5517&episode_no=34
+  - https://www.webtoons.com/en/romance/the-dragon-kings-bride/episode-35/viewer?title_no=5517&episode_no=35
+  _is_initialized: true
+
+creating:
+  email_index_completed: None
+
+liking:
+  email_index: 55
+  last_completed: "https://www.webtoons.com/en/romance/the-dragon-kings-bride/episode-34/viewer?title_no=5517&episode_no=34"

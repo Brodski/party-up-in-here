@@ -20,17 +20,17 @@ import re
 import time
 
 # must appear here b/c python is a awful programming language
-import app_config
+from App_Configs import App_Configs
 import Creator
 import Liker
-import app_config
+from Save_State import Save_State
 
 # email = "biggerpenisthanyoulol@outlook.com" # "Base" email used for eveything. ---- It's a "base" email b/c all bots will look like "biggerpenisthanyoulol+0@gmail.com" , 0=some number
 
 def setup_browser_driver() -> WebDriver:
 
     extension_path = os.path.abspath('extensions/ublock_origin-1.55.0.xpi')
-    config_varz = app_config.AppConfigSingleton(".env_config_local")
+    config_varz = App_Configs(".env_config_local")
 
     options = Options()
     if config_varz.SELENIUM_IS_HEADLESS == "True":
@@ -41,8 +41,6 @@ def setup_browser_driver() -> WebDriver:
     options.add_argument("--width=1750")
     options.add_argument("--height=1080")
     options.add_argument('--disable-features=PreloadMediaEngagementData, MediaEngagementBypassAutoplayPolicies')
-    # extension_path = os.path.abspath('extensions/ublock_origin-1.55.0.xpi')
-    # options.add_extension(extension_path)
 
     SLEEP_SCROLL = 2
     NUM_BOT_SCROLLS = 2
@@ -50,11 +48,11 @@ def setup_browser_driver() -> WebDriver:
     BROWSER_HEIGHT = 1000
     END_MAKE_ACCOUNT = 3
     browser = None
-    cookie_COPPA = {
-        'name': 'needCOPPA',
-        'value': 'false',
-        'domain': '.webtoons.com'
-    }
+    # cookie_COPPA = {
+    #     'name': 'needCOPPA',
+    #     'value': 'false',
+    #     'domain': '.webtoons.com'
+    # }
 
     # browser = webdriver.Chrome(ChromeDriverManager().install(), options=options)
     firefox_profile = webdriver.FirefoxProfile()
@@ -66,10 +64,10 @@ def setup_browser_driver() -> WebDriver:
     
     # Set up
     browser = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install(), options=options, firefox_profile=firefox_profile))
-    browser.install_addon(extension_path)
+    # browser.install_addon(extension_path)
     browser.set_window_size(BROWSER_WIDTH, BROWSER_HEIGHT)
-    browser.get("https://www.webtoons.com/member/join?loginType=EMAIL")
-    browser.add_cookie(cookie_COPPA)
+    # browser.get("https://www.webtoons.com/member/join?loginType=EMAIL")
+    # browser.add_cookie(cookie_COPPA)
     # options.add_extension(extension_path)
 
     return browser
@@ -104,21 +102,40 @@ def gogogo(isDebug=False):
             browser.quit()
     return "yay!"
 
+def is_configs_diff_from_previous_configs():
+    is_diff = False
+    if Save_State.EMAIL != App_Configs.EMAIL:
+        is_diff = True
+    if Save_State.PWORD != App_Configs.PWORD:
+        is_diff = True
+    if Save_State.CREATE_BOT_START != App_Configs.CREATE_BOT_START:
+        is_diff = True
+    if Save_State.CREATE_BOT_END_BEFORE != App_Configs.CREATE_BOT_END_BEFORE:
+        is_diff = True
+    if Save_State.LIKE_BOT_START != App_Configs.LIKE_BOT_START:
+        is_diff = True
+    if Save_State.LIKE_BOT_END_BEFORE != App_Configs.LIKE_BOT_END_BEFORE:
+        is_diff = True
+    if Save_State.LIKE_PAGES != App_Configs.LIKE_PAGES:
+        is_diff = True
+    return is_diff
 
 if __name__ == "__main__":
     # gogogo()
-    appConf = app_config.AppConfigSingleton(".env_config_local")
-    print("appConf.CREATE_BOT_END_BEFORE", appConf.CREATE_BOT_END_BEFORE)
-    print("appConf.LIKE_PAGES", appConf.LIKE_PAGES)
-    
+    my_conf_file = ".env_config_local"
+    App_Configs(my_conf_file)
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--files', type=str, help='file name at local directory')
     parser.add_argument('--which-action', type=str, choices=['create', 'vote', 'read'], help='Type of operation to perform')
 
     args = parser.parse_args()
 
+    statez = Save_State(my_conf_file)
+
+    exit(0)
+
     print("args:", args)
-    print(f"Argument provided: {args.files}")
 
     browser: WebDriver = setup_browser_driver()
     if args.files == None:
@@ -126,6 +143,7 @@ if __name__ == "__main__":
         # exit(0)
     if args.which_action == "create":
         creator = Creator.Creator(browser)
+        creator.load_state()
         creator.run()
     if args.which_action == "vote":
         liker = Liker.Liker(browser)
