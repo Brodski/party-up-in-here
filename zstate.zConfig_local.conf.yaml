@@ -1,0 +1,15 @@
+create_state:
+  email_index_finished: 15
+init:
+  CREATE_BOT_END_BEFORE: 16
+  CREATE_BOT_START: 13
+  EMAIL: itsjustbeenrevoked123@gmail.com
+  ENV: local
+  LIKE_BOT_END_BEFORE: 6
+  LIKE_BOT_START: 2
+  LIKE_PAGES:
+  - https://www.webtoons.com/en/romance/the-dragon-kings-bride/episode-35/viewer?title_no=5517&episode_no=35
+  PWORD: TEST@123
+  SELENIUM_IS_HEADLESS: 'False'
+liking_state:
+  email_index_finished: null

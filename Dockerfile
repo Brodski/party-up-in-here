@@ -1,21 +1,23 @@
 ####################################################################
 # BUILD
-# docker build --no-cache -t cbrodski/preper:v2023.1.11.1 -f Dockerfile_ECS_preper  .
-# docker build --no-cache -t cbrodski/preper:official_v2 -f Dockerfile_ECS_preper  .
+# docker build --no-cache -t cbrodski/party-up:v1 -f Dockerfile  .
 
 # DEBUG `RUN`
-# docker run --env-file .\.env -e ENV=dev cbrodski/preper:v2023.1.11.1
-# docker run --env-file .\.env -it -e ENV=dev cbrodski/preper:official_v2 /bin/bash
+# docker run --env-file .\.env -e ENV=dev cbrodski/party-up:v1
+# docker run --env-file .\.env -it -e ENV=dev cbrodski/party-up:v1 /bin/bash
 
 # PUSH
-# docker push cbrodski/preper:official_v2
+# docker push cbrodski/party-up:v1
+
+# RUN?
+# $ docker run -d -v $(pwd):/app/party-up-in-here cbrodski/party-up:v1 --file confg_varz.txt  --which-action like 
 ####################################################################
 FROM python:3.10.13-bullseye
 
 LABEL version="1.0"
-LABEL description="Runs scraper"
+LABEL description="Runs it"
 LABEL maintainer="your-email@example.com"
-LABEL url="https://github.com/Brodski/scraper-dl-vids"
+LABEL url="https://github.com"
 LABEL build_date="2024-01-01"
 LABEL vendor="Bski Inc."
 LABEL license="Bski"
@@ -30,6 +32,8 @@ RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata 
 RUN apt install git -y 
 RUN git clone https://github.com/Brodski/party-up-in-here.git
+RUN ls
+WORKDIR /app/party-up-in-here
 RUN chmod +x ./entrypoint.sh
 
 #######
@@ -55,6 +59,7 @@ RUN apt-get install -y firefox-esr
 WORKDIR /app/party-up-in-here
 
 # $ docker run <image-name> --file confg_varz.txt
+# $ docker run cbrodski/party-up:v1 --file confg_varz.txt -d -v $(pwd):/app/party-up-in-here
 
 ENTRYPOINT ["./entrypoint.sh"]
 

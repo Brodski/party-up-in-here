@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+import random
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -22,11 +23,12 @@ import os
 import re
 import time
 from App_Configs import App_Configs
+from Save_State import Save_State
+
+def rng_wait():
+    return random.uniform(.1,3)
 
 class Liker:
-
-    # config_varz = AppConfigSingleton.AppConfigSingleton(".env_config_local")
-    # config_varz = App_Configs.AppConfigSingleton()
 
     cookie_COPPA = {
         'name': 'needCOPPA',
@@ -35,38 +37,50 @@ class Liker:
     }
 
     def __init__(self, driver: WebDriver, **kwargs):
-        # Set default values
+        print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+        print("$$$$$$$$$$$$$$        Liker init        $$$$$$$$$$$$$$")
+        print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
         self.driver = driver
-        self.name = kwargs.get('name', 'Anonymous')
-        self.age = kwargs.get('age', None)
-        self.country = kwargs.get('country', 'Unknown')
 
-        self.email              = App_Configs.EMAIL
-        self.pw                 = App_Configs.PWORD
-        self.like_start         = App_Configs.LIKE_BOT_START
-        self.like_end_before    = App_Configs.LIKE_BOT_END_BEFORE
+        self.email                = App_Configs.init['EMAIL']
+        self.pw                   = App_Configs.init['PWORD']
+        self.like_start           = App_Configs.init['LIKE_BOT_START']
+        self.like_end_before      = App_Configs.init['LIKE_BOT_END_BEFORE']
+        self.page_urls: List[str] = App_Configs.init['LIKE_PAGES']
+        if App_Configs.liking_state['email_index_finished']:
+            self.like_start = App_Configs.liking_state['email_index_finished'] + 1
 
-        self.page_urls: List[str] = self.config_varz.LIKE_PAGES
+        print("     Liker - email           ", self.email)
+        print("     Liker - pw              ", self.pw)
+        print("     Liker - like_start      ", self.like_start)
+        print("     Liker - like_end_before ", self.like_end_before)
+        print("     Liker - page_urls       ", self.page_urls)
+
 
     def run(self):
+        print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+        print("$$$$$$$$$$$$$$$        Liker run       $$$$$$$$$$$$$$$")
+        print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
         for i in range (self.like_start, self.like_end_before):
             print(f'---------{i}--------')
             self.do_login(i)
             for page in self.page_urls:
                 print("Liking: ", page)
                 self.send_like(page)
+                App_Configs.liking_state['email_index_finished'] = i
+                Save_State.update_state_file()
             self.driver.delete_all_cookies()
         print("DONE!")
 
 
     def do_login(self, count):
-        # login_page = "https://www.webtoons.com/member/login?returnUrl=/"
+        time.sleep(rng_wait())
         login_page = "https://www.webtoons.com/member/login"
         timeout = 10
         username = self.email.split('@')[0]
         domain   = self.email.split('@')[1]
 
-        email_w_count = f"{username}+fsxx{count}@{domain}" # supergera+12@gmail.com
+        email_w_count = f"{username}+xxx{count}@{domain}" # supergera+12@gmail.com
 
         self.driver.get(login_page)
         self.driver.add_cookie(self.cookie_COPPA)
@@ -88,16 +102,17 @@ class Liker:
             const evt2 = new Event("focus", {"view": window, "bubbles":true, "cancelable":false});
             document.getElementById("email_password").dispatchEvent(evt2)
         """)
+                
         email_input_clickable   = self.driver.find_element(By.ID, "email_address")
         password_clickable      = self.driver.find_element(By.ID, "email_password")
         submit_clickable        = self.driver.find_element(By.CSS_SELECTOR, "button.login_btn.type_green._emailLoginButton")
         ActionChains(self.driver) \
-            .click(email_input_clickable).send_keys(email_w_count) \
-            .click(password_clickable).send_keys(self.pw) \
-            .click(submit_clickable) \
+            .click(email_input_clickable).send_keys(email_w_count).pause(rng_wait()) \
+            .click(password_clickable).send_keys(self.pw).pause(rng_wait()) \
+            .click(submit_clickable).pause(rng_wait()) \
             .perform()
 
-        print("LOGIN COMPLETE: ", email_w_count)
+        print("LIKER - LOGIN COMPLETE: ", email_w_count)
         time.sleep(1)
 
     def send_like(self, page_url):
@@ -127,4 +142,4 @@ class Liker:
                 subscribe.click()
             }
         """)
-        time.sleep(1)
+        time.sleep(rng_wait())

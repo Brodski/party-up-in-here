@@ -1,7 +1,7 @@
 #!/bin/bash
 # git reset --hard origin/master ; 
 # git pull origin master --force
-git pull origin master
+git pull origin chad
 
 # Execute the Python script with all arguments passed to this script
 exec python main.py "$@"
