@@ -62,7 +62,7 @@ class Creator:
         email_name = self.email.split('@')[0]
         domain   = self.email.split('@')[1]
 
-        email_w_count = f"{email_name}+xxx{count}@{domain}" # supergera+12@gmail.com
+        email_w_count = f"{email_name}+{count}@{domain}" # supergera+12@gmail.com
         print("Creating...", email_w_count)
 
         self.driver.get(login_url)

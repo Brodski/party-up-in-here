@@ -80,7 +80,7 @@ class Liker:
         username = self.email.split('@')[0]
         domain   = self.email.split('@')[1]
 
-        email_w_count = f"{username}+xxx{count}@{domain}" # supergera+12@gmail.com
+        email_w_count = f"{username}+{count}@{domain}" # supergera+12@gmail.com
 
         self.driver.get(login_page)
         self.driver.add_cookie(self.cookie_COPPA)
