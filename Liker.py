@@ -37,9 +37,9 @@ class Liker:
     }
 
     def __init__(self, driver: WebDriver, **kwargs):
-        print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
-        print("$$$$$$$$$$$$$$        Liker init        $$$$$$$$$$$$$$")
-        print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+        print("####################################################")
+        print("##########        Liker - init()         ##########")
+        print("####################################################")
         self.driver = driver
 
         self.email                = App_Configs.init['EMAIL']
@@ -54,13 +54,13 @@ class Liker:
         print("     Liker - pw              ", self.pw)
         print("     Liker - like_start      ", self.like_start)
         print("     Liker - like_end_before ", self.like_end_before)
-        print("     Liker - page_urls       ", self.page_urls)
+        print("     Liker - page_urls     \n", "\n".join(self.page_urls))
 
 
     def run(self):
-        print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
-        print("$$$$$$$$$$$$$$$        Liker run       $$$$$$$$$$$$$$$")
-        print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+        print("##################################################")
+        print("##########        Liker - run()        ###########")
+        print("##################################################")
         for i in range (self.like_start, self.like_end_before):
             print(f'---------{i}--------')
             self.do_login(i)

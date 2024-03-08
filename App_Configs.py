@@ -8,6 +8,8 @@ class App_Configs:
     create_state = Abstract_State.create_state.copy()
     liking_state = Abstract_State.liking_state.copy()
 
+    CONFIG_DIRECTORY = "./configs"
+
     @classmethod
     def prep_state_filename(cls, filename):
         return f"{filename}.zstate.yaml"
@@ -15,7 +17,7 @@ class App_Configs:
     def __new__(cls, file=None):
             instance = super(App_Configs, cls).__new__(cls)
             if (file != None):
-                env_vars = dotenv_values(file)  
+                env_vars = dotenv_values(f"{cls.CONFIG_DIRECTORY}/{file}")  
                 cls.create_state['email_index_finished'] = None
                 cls.liking_state['email_index_finished'] = None
                 
@@ -37,15 +39,15 @@ class App_Configs:
     
     @classmethod
     def create_new_file(cls, file_name):
-        print("####################################################")
-        print("#####      App_Configs - create_new_file()     #####")
-        print("####################################################")
+        # print("####################################################")
+        # print("#####      App_Configs - create_new_file()     #####")
+        # print("####################################################")
         data = {}
         for attr in dir(App_Configs):
             if not attr.startswith("__") and not callable(getattr(App_Configs, attr)): # Check if the attribute is not a built-in attribute and is not callable (to filter out methods)
                 value = getattr(App_Configs, attr)
                 data[attr] = value
-                print("create_new_file - attr,value:", attr, value)
+                # print("create_new_file - attr,value:", attr, value)
 
         # data['init'] = {}
         # data['create_state'] = {}
@@ -54,6 +56,7 @@ class App_Configs:
         # data['liking_state']['email_index_finished'] = None
         # data['liking_state']['at_page'] = None
 
-        with open(file_name, 'w') as file:
+        file_path = f"{cls.CONFIG_DIRECTORY}/{file_name}"
+        with open(file_path, 'w') as file:
             yaml.dump(data, file, sort_keys=False, default_flow_style=False, indent=2)
-        print("App_Configs - CREATED SAVE STATE")
+        # print("App_Configs - CREATED SAVE STATE")
