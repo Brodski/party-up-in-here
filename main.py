@@ -87,17 +87,23 @@ def is_current_configs_diff_from_previous_configs(): # returns True for 1st run
         is_diff = True
     return is_diff
 
+# python main.py --which-action like
+# python main.py --which-action create
+# python main.py --which-action create --file myEmail_1.conf
 if __name__ == "__main__":
 
-    default_conf_file = "zConfig_local.conf"
+    conf_file = "zConfig_local.conf" # default
     parser = argparse.ArgumentParser()
     parser.add_argument('--files', type=str, help='file name at local directory')
     parser.add_argument('--which-action', type=str, choices=['create', 'like', 'read'], help='Type of operation to perform')
 
     args = parser.parse_args()
 
-    App_Configs(default_conf_file)
-    state_filename = App_Configs.prep_state_filename(default_conf_file)
+    if args.files == None:
+        print('\nNo file present in args. Defaulting to: ', conf_file)
+        conf_file = str(args.files)
+    App_Configs(conf_file)
+    state_filename = App_Configs.prep_state_filename(conf_file)
     Save_State.init_state_file(state_filename)
     if is_current_configs_diff_from_previous_configs():
         print("\n main() - TRUE - is_current_configs_diff_from_previous_configs \n")
@@ -105,13 +111,9 @@ if __name__ == "__main__":
     else:
         print("\n main() - FALSE - is_current_configs_diff_from_previous_configs \n")
         Save_State.state_into_app_configs()
-    print("args:", args)
 
     try:
         browser: WebDriver = setup_browser_driver()
-        if args.files == None:
-            print('expected a file')
-            # exit(0)
         if args.which_action == "create":
             creator = Creator.Creator(browser)
             creator.run()

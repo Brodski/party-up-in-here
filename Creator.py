@@ -43,10 +43,10 @@ class Creator:
         if App_Configs.create_state['email_index_finished']:
             self.create_start = App_Configs.create_state['email_index_finished'] + 1
 
-        print("     Creator - email           ", self.email)
-        print("     Creator - pw              ", self.pw)
-        print("     Creator - like_start      ", self.create_start)
-        print("     Creator - like_end_before ", self.create_end_before)
+        print("     Creator - email             ", self.email)
+        print("     Creator - pw                ", self.pw)
+        print("     Creator - create_start      ", self.create_start)
+        print("     Creator - create_end_before ", self.create_end_before)
 
     def run(self):
         for i in range (self.create_start, self.create_end_before):
