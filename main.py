@@ -53,7 +53,7 @@ def setup_browser_driver() -> WebDriver:
     browser.set_window_size(BROWSER_WIDTH, BROWSER_HEIGHT)
     browser.get("https://www.webtoons.com/member/join?loginType=EMAIL")
     browser.add_cookie(cookie_COPPA)
-    browser.set_window_position(15,15)
+    browser.set_window_position(0,0)
     # browser.install_addon(extension_path)
     # options.add_extension(extension_path)
 
