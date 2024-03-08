@@ -11,6 +11,11 @@
 
 # RUN?
 # $ docker run -d -v $(pwd):/app/party-up-in-here cbrodski/party-up:v1 --file confg_varz.txt  --which-action like 
+
+# $ docker run <image-name> --file confg_varz.txt
+# $ docker run cbrodski/party-up:v1 --file myEmail_1.conf -d -v $(pwd)/configs:/app/party-up-in-here/configs
+# $ docker run cbrodski/party-up:v1 --which-action create --file myEmail_1.conf     -d -v $(pwd)/configs:/app/party-up-in-here/configs 
+
 ####################################################################
 FROM python:3.10.13-bullseye
 
@@ -31,6 +36,7 @@ RUN apt update
 RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata 
 RUN apt install git -y 
+RUN git config pull.rebase false
 RUN git clone https://github.com/Brodski/party-up-in-here.git
 WORKDIR /app/party-up-in-here
 RUN chmod +x ./entrypoint.sh
@@ -57,13 +63,4 @@ RUN apt-get install -y firefox-esr
 ######
 WORKDIR /app/party-up-in-here
 
-# $ docker run <image-name> --file confg_varz.txt
-# $ docker run cbrodski/party-up:v1 --file confg_varz.txt -d -v $(pwd):/app/party-up-in-here
-
 ENTRYPOINT ["./entrypoint.sh"]
-
-# CMD echo "NOT DONE!!!!!!!!!!!!" ; \
-#     git reset --hard origin/master ; \
-#     git pull origin master --force && \ 
-#     python kickPreper.py ; \
-#     echo "DONE!!!!!!!!!!!!" ; 
