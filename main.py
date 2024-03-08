@@ -1,17 +1,10 @@
 from __future__ import unicode_literals
 from bs4 import BeautifulSoup
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
+from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.service import Service as FirefoxService
-from selenium.webdriver import ActionChains
-from selenium.webdriver.common.actions.action_builder import ActionBuilder
-from selenium.webdriver.common.actions.mouse_button import MouseButton
 from selenium.webdriver.common.by import By
 from typing import List
-from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
 from selenium.webdriver.firefox.webdriver import WebDriver
 import argparse
@@ -19,13 +12,10 @@ import os
 import re
 import time
 
-# must appear here b/c python is a awful programming language
 from App_Configs import App_Configs
 import Creator
 import Liker
 from Save_State import Save_State
-
-# email = "biggerpenisthanyoulol@outlook.com" # "Base" email used for eveything. ---- It's a "base" email b/c all bots will look like "biggerpenisthanyoulol+0@gmail.com" , 0=some number
 
 def setup_browser_driver() -> WebDriver:
 
@@ -50,20 +40,20 @@ def setup_browser_driver() -> WebDriver:
         'domain': '.webtoons.com'
     }
 
-    # browser = webdriver.Chrome(ChromeDriverManager().install(), options=options)
     firefox_profile = webdriver.FirefoxProfile()
     firefox_profile.set_preference("media.block-play-until-visible", False)
     firefox_profile.set_preference("media.autoplay.blocking_policy", 5)
     firefox_profile.set_preference("media.autoplay.default", 1)
     firefox_profile.set_preference("media.autoplay.enabled.user-gestures-needed", False)
     firefox_profile.set_preference("media.autoplay.block-event.enabled", True)
-    
+    options.profile = firefox_profile
+    service = FirefoxService(executable_path=GeckoDriverManager().install())
     # Set up
-    browser = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install(), options=options, firefox_profile=firefox_profile))
-    # browser.install_addon(extension_path)
+    browser = webdriver.Firefox(service=service, options=options)
     browser.set_window_size(BROWSER_WIDTH, BROWSER_HEIGHT)
     browser.get("https://www.webtoons.com/member/join?loginType=EMAIL")
     browser.add_cookie(cookie_COPPA)
+    # browser.install_addon(extension_path)
     # options.add_extension(extension_path)
 
     return browser
@@ -99,9 +89,10 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if args.files == None:
-        print('\nNo file present in args. Defaulting to: ', conf_file)
+    if args.files != None:
         conf_file = str(args.files)
+    else:
+        print('\nNo file present in args. Defaulting to: ', conf_file)
     App_Configs(conf_file)
     state_filename = App_Configs.prep_state_filename(conf_file)
     Save_State.init_state_file(state_filename)

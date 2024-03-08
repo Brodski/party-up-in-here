@@ -3,18 +3,17 @@
 # docker build --no-cache -t cbrodski/party-up:v1 -f Dockerfile  .
 
 # DEBUG `RUN`
-# docker run -it cbrodski/party-up:v1 /bin/bash
-# docker run -it -v $(pwd):/app/party-up-in-here cbrodski/party-up:v1 /bin/bash
+# docker run -d --entrypoint tail -v ${PWD}/configs:/app/party-up-in-here/configs cbrodski/party-up:v1 -f /dev/null
+# AND THEN THIS
+# docker exec -it <a898649aeb40> /bin/bash
 
 # PUSH
 # docker push cbrodski/party-up:v1
 
 # RUN?
-# $ docker run -d -v $(pwd):/app/party-up-in-here cbrodski/party-up:v1 --file confg_varz.txt  --which-action like 
-
 # $ docker run <image-name> --file confg_varz.txt
 # $ docker run cbrodski/party-up:v1 --file myEmail_1.conf -d -v $(pwd)/configs:/app/party-up-in-here/configs
-# $ docker run cbrodski/party-up:v1 --which-action create --file myEmail_1.conf     -d -v $(pwd)/configs:/app/party-up-in-here/configs 
+# $ docker run -v ${pwd}\configs:/app/party-up-in-here/configs  cbrodski/party-up:v1 --which-action create --file myEmail_1.conf     
 
 ####################################################################
 FROM python:3.10.13-bullseye
@@ -36,9 +35,9 @@ RUN apt update
 RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata 
 RUN apt install git -y 
-RUN git config pull.rebase false
 RUN git clone https://github.com/Brodski/party-up-in-here.git
 WORKDIR /app/party-up-in-here
+RUN git config pull.rebase false
 RUN chmod +x ./entrypoint.sh
 
 #######
@@ -57,6 +56,10 @@ RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
 WORKDIR /app/party-up-in-here
 RUN pip install -r requirements.txt
 RUN apt-get install -y firefox-esr
+
+# RUN apt-get install -y x11-apps
+# RUN apt-get install -y x11-xserver-utils
+# ENV DISPLAY=:0
 
 ######
 # GO #

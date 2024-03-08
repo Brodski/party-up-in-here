@@ -33,7 +33,7 @@ class App_Configs:
                 LIKE_PAGES_aux = re.sub(r'\s+', "", env_vars['LIKE_PAGES']).split(',')
                 LIKE_PAGES_aux = LIKE_PAGES_aux if LIKE_PAGES_aux[-1] != "" else LIKE_PAGES_aux[:-1] # incase last ele ends with ,
                 cls.init['LIKE_PAGES'] = [page for page in LIKE_PAGES_aux if (page[0] != "#" and page[:2] != "//")] # filter out "comments" eg # and //
-                print("App_Configs.new() - cls.init['LIKE_PAGES']", cls.init['LIKE_PAGES'])
+
             return instance
 
     
