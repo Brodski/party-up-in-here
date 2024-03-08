@@ -85,7 +85,7 @@ if __name__ == "__main__":
     conf_file = "zConfig_local.conf" # default
     parser = argparse.ArgumentParser()
     parser.add_argument('--files', type=str, help='file name at local directory')
-    parser.add_argument('--which-action', type=str, choices=['create', 'like', 'read'], help='Type of operation to perform')
+    parser.add_argument('--which-action', type=str, choices=['create', 'like'], help='Type of operation to perform')
 
     args = parser.parse_args()
 

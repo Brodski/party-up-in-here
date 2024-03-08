@@ -21,7 +21,7 @@ class Save_State:
         cls.save_state_file = filename # "zConfg_local.zstate.yaml"
 
         if cls._is_file_exists():
-            print("Save_State - Loading previous file!")
+            print("Save_State - Checking previous file...")
             cls.file_into_this()
         else:
             print("Save_State - Creating new state!")
