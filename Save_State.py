@@ -17,7 +17,7 @@ class Save_State:
         print("##############################################")
         print("#########      Save_State init_state_file     ###########")
         print("##############################################")
-        cls.save_state_file = filename # "zstate.zConfg_local.yaml"
+        cls.save_state_file = filename # "zConfg_local.zstate.yaml"
 
         if cls._is_file_exists():
             print("BEFORE!!!!!!!!!!!")

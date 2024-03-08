@@ -3,8 +3,8 @@
 # docker build --no-cache -t cbrodski/party-up:v1 -f Dockerfile  .
 
 # DEBUG `RUN`
-# docker run --env-file .\.env -e ENV=dev cbrodski/party-up:v1
-# docker run --env-file .\.env -it -e ENV=dev cbrodski/party-up:v1 /bin/bash
+# docker run -it cbrodski/party-up:v1 /bin/bash
+# docker run -it -v $(pwd):/app/party-up-in-here cbrodski/party-up:v1 /bin/bash
 
 # PUSH
 # docker push cbrodski/party-up:v1
@@ -32,7 +32,6 @@ RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata 
 RUN apt install git -y 
 RUN git clone https://github.com/Brodski/party-up-in-here.git
-RUN ls
 WORKDIR /app/party-up-in-here
 RUN chmod +x ./entrypoint.sh
 

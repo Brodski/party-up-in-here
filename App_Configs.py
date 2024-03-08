@@ -10,7 +10,7 @@ class App_Configs:
 
     @classmethod
     def prep_state_filename(cls, filename):
-        return f"zstate.{filename}.yaml"
+        return f"{filename}.zstate.yaml"
          
     def __new__(cls, file=None):
             instance = super(App_Configs, cls).__new__(cls)

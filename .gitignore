@@ -1,6 +1,6 @@
 venv/
 *.xpi
-
+**.zstate.yaml
 .vscode/
 
 
