@@ -32,6 +32,7 @@ example
 - in your config file, `headless: True` = No graphics.  Idea is you can start up 10 or so programs simultaneously, with 10 differecnt config files
 - there is a state file that saves your progress (`myEmail_1.conf.zstate.yaml`). Keeps track of where the app is in its process.
 
+#### Vid
 0:00 - demo "like" action  
 1:00 - demo "create" action  
 2:20 - demo "headless" config  
@@ -42,4 +43,4 @@ example
 
 
 --- 
-This is a completely theoritical program only and is for educational purposes. If you choose to use it then you accept full responsability and indemnity. This program is not affiliated, associated, or partnered with webtoon in any way. We are not authorized, endorsed, or sponsored.
+This is a completely theoritical program only and is for educational purposes. If you choose to use it then you accept full responsability and indemnity. This program is not affiliated, associated, or partnered with webtoon in any way. The program is not authorized, endorsed, or sponsored.
