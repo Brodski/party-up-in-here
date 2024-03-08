@@ -2,7 +2,8 @@ venv/
 *.xpi
 **.zstate.yaml
 .vscode/
-
+configs/*
+!configs/myEmail_1.conf
 
 ###################################################
 # Byte-compiled / optimized / DLL files

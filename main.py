@@ -53,6 +53,7 @@ def setup_browser_driver() -> WebDriver:
     browser.set_window_size(BROWSER_WIDTH, BROWSER_HEIGHT)
     browser.get("https://www.webtoons.com/member/join?loginType=EMAIL")
     browser.add_cookie(cookie_COPPA)
+    browser.set_window_position(15,15)
     # browser.install_addon(extension_path)
     # options.add_extension(extension_path)
 
@@ -61,6 +62,8 @@ def setup_browser_driver() -> WebDriver:
 
 def is_current_configs_diff_from_previous_configs(): # returns True for 1st run
     is_diff = False
+    if Save_State.init['SELENIUM_IS_HEADLESS'] != App_Configs.init['SELENIUM_IS_HEADLESS']:
+        is_diff = True
     if Save_State.init['EMAIL'] != App_Configs.init['EMAIL']:
         is_diff = True
     if Save_State.init['PWORD'] != App_Configs.init['PWORD']:
@@ -77,9 +80,6 @@ def is_current_configs_diff_from_previous_configs(): # returns True for 1st run
         is_diff = True
     return is_diff
 
-# python main.py --which-action like
-# python main.py --which-action create
-# python main.py --which-action create --file myEmail_1.conf
 if __name__ == "__main__":
 
     conf_file = "zConfig_local.conf" # default
@@ -89,18 +89,18 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if args.files != None:
-        conf_file = str(args.files)
-    else:
-        print('\nNo file present in args. Defaulting to: ', conf_file)
+    if args.files == None:
+        print('\nNo file present in args. You need the flag: --file myfile.conf')
+        exit(1)
+    conf_file = str(args.files)
     App_Configs(conf_file)
     state_filename = App_Configs.prep_state_filename(conf_file)
     Save_State.init_state_file(state_filename)
     if is_current_configs_diff_from_previous_configs():
-        print("\n main() - TRUE - is_current_configs_diff_from_previous_configs \n")
+        print("\n main() - Config file changed from last time. \n")
         App_Configs.create_new_file(Save_State.save_state_file)
     else:
-        print("\n main() - FALSE - is_current_configs_diff_from_previous_configs \n")
+        print("\n main() - Config file is the SAME from last time \n")
         Save_State.state_into_app_configs()
 
     try:

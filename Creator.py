@@ -63,7 +63,7 @@ class Creator:
         domain   = self.email.split('@')[1]
 
         email_w_count = f"{email_name}+xxx{count}@{domain}" # supergera+12@gmail.com
-        print(email_w_count)
+        print("Creating...", email_w_count)
 
         self.driver.get(login_url)
         self.driver.add_cookie(self.cookie_COPPA)
