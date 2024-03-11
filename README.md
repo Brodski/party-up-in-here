@@ -32,13 +32,12 @@ example
 - in your config file, `headless: True` = No graphics.  Idea is you can start up 10 or so programs simultaneously, with 10 differecnt config files
 - there is a state file that saves your progress (`myEmail_1.conf.zstate.yaml`). Keeps track of where the app is in its process.
 
-#### Vid
-0:00 - demo "like" action  
-1:00 - demo "create" action  
-2:20 - demo "headless" config  
-4:10 - demo two programs running- set up  
-6:20 - two programs running, running  
-7:00 - you can end it here. I wanted to demo liking in headless mode, but I fucked up. Partial b/c microsoft's video screencapture UI got in the way of my terminal and I couldnt drag the window 😞  
+#### Vid  
+1:00 demo "create" (account sign up)   
+3:00 demo "like"   
+5:10 set up two programs running   
+6:50 two programs running   
+8:40 demo headless mode   
 
 
 

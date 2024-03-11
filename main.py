@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+import traceback
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
@@ -80,6 +81,23 @@ def is_current_configs_diff_from_previous_configs(): # returns True for 1st run
         is_diff = True
     return is_diff
 
+def attempt_callback(callback, fail_count=0):
+        MAX_RETRY = 3
+        try:
+            callback()
+
+        except Exception as e:
+            print(f"Failed. Trying again... (Exception name: {e.__class__.__name__})")
+            if fail_count < MAX_RETRY:
+                time.sleep(1)
+                return attempt_callback(callback, fail_count + 1)
+            print(f"Failed after {fail_count} attempts. Ending. 🙀😫😵")
+            traceback.print_exc()
+            raise # Re-raise the last exception to preserve the original traceback
+
+
+
+
 if __name__ == "__main__":
 
     conf_file = "zConfig_local.conf" # default
@@ -107,10 +125,12 @@ if __name__ == "__main__":
         browser: WebDriver = setup_browser_driver()
         if args.which_action == "create":
             creator = Creator.Creator(browser)
-            creator.run()
+            attempt_callback(creator.run())
+            # creator.run()
         if args.which_action == "like":
             liker = Liker.Liker(browser)
-            liker.run()            
+            attempt_callback(liker.run())
+            # liker.run()
     except Exception as e:
         print("An error occurred :(")
         print(f"{e}")

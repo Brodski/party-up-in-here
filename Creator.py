@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 from datetime import datetime
+import traceback
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -76,7 +77,7 @@ class Creator:
         submit_clickable        = self.driver.find_element(By.CLASS_NAME, "NPI\=a\:signup")
         
         def rng_wait():
-            return random.uniform(.1,3)
+            return random.uniform(0.3,3)
 
         ActionChains(self.driver) \
             .click(email_clickable).send_keys(email_w_count).pause(rng_wait()) \
