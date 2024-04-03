@@ -116,16 +116,19 @@ class Liker:
         time.sleep(1)
 
     def send_like(self, page_url):
-        timeout = 10
+        timeout = 3
         self.driver.get(page_url)
         self.driver.execute_script("""        
             let like = document.getElementById("likeItButton")
             like.scrollIntoView({ block: "start"}); 
         """)
 
-        # Wait -.-
-        ele_wait = EC.presence_of_element_located((By.CSS_SELECTOR, "#cbox_module__write_textarea"))
-        WebDriverWait(self.driver, timeout).until(ele_wait)
+        # Wait for the comment section's textarea thing. B/c thats what humans do.
+        try:
+            ele_wait = EC.presence_of_element_located((By.CSS_SELECTOR, "#comment_module .wcc_Editor__root"))
+            WebDriverWait(self.driver, timeout).until(ele_wait)
+        except Exception: 
+            print("Warning - couldnt find comment section css selector. Not a problem, maybe worth mentioning it to moneyman")
         
         time.sleep(.1)
         self.driver.execute_script("""     
