@@ -36,6 +36,17 @@ class Liker:
         'domain': '.webtoons.com'
     }
 
+    css = """
+        body {
+            overflow: auto !important;
+        }
+        #_dimForPopup,
+        ._policyAgreePopup {
+            display: none !important;
+        }
+    """
+
+
     def __init__(self, driver: WebDriver, **kwargs):
         print("####################################################")
         print("##########        Liker - init()         ##########")
@@ -74,7 +85,7 @@ class Liker:
 
 
     def do_login(self, count):
-        time.sleep(rng_wait())
+        # time.sleep(rng_wait())
         login_page = "https://www.webtoons.com/member/login"
         timeout = 10
         username = self.email.split('@')[0]
@@ -113,16 +124,23 @@ class Liker:
             .perform()
 
         print("LIKER - LOGIN COMPLETE: ", email_w_count)
-        time.sleep(1)
+        time.sleep(0.1)
 
     def send_like(self, page_url):
         timeout = 3
         self.driver.get(page_url)
+        # inject css
+        self.driver.execute_script(f"""
+            var style = document.createElement('style');
+            style.type = 'text/css';
+            style.innerHTML = `{self.css}`;
+            document.head.appendChild(style);
+        """)
+        # script, scroll to button
         self.driver.execute_script("""        
             let like = document.getElementById("likeItButton")
             like.scrollIntoView({ block: "start"}); 
         """)
-
         # Wait for the comment section's textarea thing. B/c thats what humans do.
         try:
             ele_wait = EC.presence_of_element_located((By.CSS_SELECTOR, "#comment_module .wcc_Editor__root"))
@@ -145,4 +163,5 @@ class Liker:
                 subscribe.click()
             }
         """)
-        time.sleep(rng_wait())
+        # time.sleep(rng_wait())
+        time.sleep(0.2)

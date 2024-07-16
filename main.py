@@ -134,6 +134,7 @@ if __name__ == "__main__":
     except Exception as e:
         print("An error occurred :(")
         print(f"{e}")
+        print(traceback.format_exc())
     finally:
         if browser:
             browser.quit()

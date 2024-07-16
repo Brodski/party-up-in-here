@@ -4,6 +4,7 @@ venv/
 .vscode/
 configs/*
 !configs/myEmail_1.conf
+extensions/*
 
 ###################################################
 # Byte-compiled / optimized / DLL files
