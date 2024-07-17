@@ -18,6 +18,9 @@ from selenium.webdriver.firefox.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import UnexpectedAlertPresentException, NoAlertPresentException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.webdriver.common.alert import Alert
 # import config_varz
 import os
 import re
@@ -26,7 +29,7 @@ from App_Configs import App_Configs
 from Save_State import Save_State
 
 def rng_wait():
-    return random.uniform(.1,3)
+    return random.uniform(0.1, 0.7)
 
 class Liker:
 
@@ -36,23 +39,12 @@ class Liker:
         'domain': '.webtoons.com'
     }
 
-    css = """
-        body {
-            overflow: auto !important;
-        }
-        #_dimForPopup,
-        ._policyAgreePopup {
-            display: none !important;
-        }
-    """
-
 
     def __init__(self, driver: WebDriver, **kwargs):
         print("####################################################")
         print("##########        Liker - init()         ##########")
         print("####################################################")
         self.driver = driver
-
         self.email                = App_Configs.init['EMAIL']
         self.pw                   = App_Configs.init['PWORD']
         self.like_start           = App_Configs.init['LIKE_BOT_START']
@@ -60,13 +52,11 @@ class Liker:
         self.page_urls: List[str] = App_Configs.init['LIKE_PAGES']
         if App_Configs.liking_state['email_index_finished']:
             self.like_start = App_Configs.liking_state['email_index_finished'] + 1
-
         print("     Liker - email           ", self.email)
         print("     Liker - pw              ", self.pw)
         print("     Liker - like_start      ", self.like_start)
         print("     Liker - like_end_before ", self.like_end_before)
         print("     Liker - page_urls     \n", "\n".join(self.page_urls))
-
 
     def run(self):
         print("##################################################")
@@ -83,9 +73,7 @@ class Liker:
             self.driver.delete_all_cookies()
         print("DONE!")
 
-
     def do_login(self, count):
-        # time.sleep(rng_wait())
         login_page = "https://www.webtoons.com/member/login"
         timeout = 10
         username = self.email.split('@')[0]
@@ -94,6 +82,13 @@ class Liker:
         email_w_count = f"{username}+{count}@{domain}" # supergera+12@gmail.com
 
         self.driver.get(login_page)
+        
+        cookie_sess = self.driver.get_cookie("NEO_SES")
+        current_url = self.driver.current_url
+        if cookie_sess or current_url == "https://www.webtoons.com/en/":
+            print(f"We are already logged in")
+            return
+
         self.driver.add_cookie(self.cookie_COPPA)
 
         # 1 Wait for client render -.-
@@ -129,39 +124,53 @@ class Liker:
     def send_like(self, page_url):
         timeout = 3
         self.driver.get(page_url)
-        # inject css
-        self.driver.execute_script(f"""
-            var style = document.createElement('style');
-            style.type = 'text/css';
-            style.innerHTML = `{self.css}`;
-            document.head.appendChild(style);
-        """)
-        # script, scroll to button
-        self.driver.execute_script("""        
-            let like = document.getElementById("likeItButton")
-            like.scrollIntoView({ block: "start"}); 
-        """)
-        # Wait for the comment section's textarea thing. B/c thats what humans do.
+
         try:
-            ele_wait = EC.presence_of_element_located((By.CSS_SELECTOR, "#comment_module .wcc_Editor__root"))
-            WebDriverWait(self.driver, timeout).until(ele_wait)
-        except Exception: 
-            print("Warning - couldnt find comment section css selector. Not a problem, maybe worth mentioning it to moneyman")
+            self.accept_mysterious_alert()
+
+            # script, scroll to button
+            self.driver.execute_script("""        
+                let like = document.getElementById("likeItButton")
+                like?.scrollIntoView({ block: "start"}); 
+            """)
+            # Wait for the comment section's textarea thing. B/c thats what humans do.
+            try:
+                ele_wait = EC.presence_of_element_located((By.CSS_SELECTOR, "#comment_module .wcc_Editor__root"))
+                WebDriverWait(self.driver, timeout).until(ele_wait)
+            except Exception: 
+                print("Warning - couldnt find comment section css selector. Not a problem, maybe worth mentioning it to moneyman")
         
-        time.sleep(.1)
-        self.driver.execute_script("""     
-            let like = document.getElementById("likeItButton")
-            let subscribe = document.getElementById("footer_favorites")
-            let isLikeOn = like.getElementsByClassName("_btnLike")[0].classList.contains("on")
-            let isSubbedOn = subscribe.classList.contains("on")
-            console.log("isLikeOn", isLikeOn)
-            console.log("isSubbedOn", isSubbedOn)
-            if (!isLikeOn) {
-                like.click()
-            }
-            if (!isSubbedOn) {
-                subscribe.click()
-            }
-        """)
-        # time.sleep(rng_wait())
-        time.sleep(0.2)
+            ele_wait_2 = EC.presence_of_element_located((By.CSS_SELECTOR, "#likeItButton"))
+            WebDriverWait(self.driver, timeout).until(ele_wait_2)
+            
+            time.sleep(.05)
+            self.driver.execute_script("""     
+                let like = document.getElementById("likeItButton");
+                let subscribe = document.getElementById("footer_favorites");
+                let isLikeOn = like.getElementsByClassName("_btnLike")[0].classList.contains("on");
+                let isSubbedOn = subscribe.classList.contains("on");
+                if (!isLikeOn) {
+                    like.click();
+                }
+                if (!isSubbedOn) {
+                    subscribe.click();
+                }
+            """)
+            # time.sleep(rng_wait())
+            time.sleep(0.2)
+        except UnexpectedAlertPresentException as e:
+            print(f"Unexpected alert detected: {e}")
+            self.handle_unexpected_alert()
+            pass
+
+    def handle_unexpected_alert(self):
+        try:
+            Alert(self.driver).accept() # or alert.accept()
+        except NoAlertPresentException:
+            pass
+    
+    def accept_mysterious_alert(self): # shows up randomly 
+        try:
+            Alert(self.driver).accept()
+        except NoAlertPresentException:
+            pass

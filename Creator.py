@@ -74,10 +74,10 @@ class Creator:
         pw1Input_clickable      = self.driver.find_element(By.ID, "pw")
         pw1Input2_clickable     = self.driver.find_element(By.ID, "retype_pw")
         nicknameInput_clickable = self.driver.find_element(By.ID, "nickname")
-        submit_clickable        = self.driver.find_element(By.CLASS_NAME, "NPI\=a\:signup")
+        submit_clickable        = self.driver.find_element(By.CLASS_NAME, r"NPI\=a\:signup")
         
         def rng_wait():
-            return random.uniform(0.3,3)
+            return random.uniform(0.3,2)
 
         ActionChains(self.driver) \
             .click(email_clickable).send_keys(email_w_count).pause(rng_wait()) \

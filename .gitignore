@@ -1,11 +1,13 @@
 venv/
 *.xpi
 **.zstate.yaml
-.vscode/
+
+screenshots/*
 configs/*
-!configs/myEmail_1.conf
+!configs/myConf_1.conf
 extensions/*
 
+!**/.gitkeep
 ###################################################
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -167,3 +169,5 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+
+.vscode/

@@ -6,26 +6,20 @@ $ pip install virtualenv
 $ virtualenv venv  
 $ .\venv\Scripts\activate
 $ pip install -r requirements.txt  
+$ python stylus-aux.py
 ```  
   
 # Running   
   
 ```  
 $ .\venv\Scripts\activate
-$ python .\main.py --which-action create --file myEmail_1.conf  
-    OR  
-$ python .\main.py --which-action like --file myEmail_1.conf  
+$ python .\main.py --file myEmail_1.conf --which-action create    
+$ python .\main.py --file myEmail_1.conf --which-action like   
 ```  
+  
   
 `--file` ==> filename in configs/...  
 `--which-action` ==> "create" or "like"  
-
-example
-```
- python main.py --file myEmail_1.conf --which-action like
- python main.py --file myEmail_1.conf --which-action create
-```
-
 
 - in case  you dont know, you can cancel with ctrl+c in terminal
 - comment out urls form LIKE_PAGES with # or //. ( highlight multi lines and ctrl+/ in your editor in case you didnt know)
