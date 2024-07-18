@@ -38,6 +38,16 @@ class Liker:
         'value': 'false',
         'domain': '.webtoons.com'
     }
+    cookie_cm_agr = {
+        'name': 'cm_agr',
+        'value': 'false',
+        'domain': '.webtoons.com'
+    }
+    cookie_cm_lgr = {
+        'name': 'cm_lgr',
+        'value': 'false',
+        'domain': '.webtoons.com'
+    }
 
 
     def __init__(self, driver: WebDriver, **kwargs):
@@ -123,6 +133,8 @@ class Liker:
 
     def send_like(self, page_url):
         timeout = 3
+        self.driver.add_cookie(self.cookie_cm_lgr)
+        self.driver.add_cookie(self.cookie_cm_agr)
         self.driver.get(page_url)
 
         try:
