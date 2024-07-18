@@ -128,18 +128,18 @@ class Liker:
         try:
             self.accept_mysterious_alert()
 
-            # script, scroll to button
-            self.driver.execute_script("""        
-                let like = document.getElementById("likeItButton")
-                like?.scrollIntoView({ block: "start"}); 
-            """)
             # Wait for the comment section's textarea thing. B/c thats what humans do.
             try:
                 ele_wait = EC.presence_of_element_located((By.CSS_SELECTOR, "#comment_module .wcc_Editor__root"))
                 WebDriverWait(self.driver, timeout).until(ele_wait)
             except Exception: 
                 print("Warning - couldnt find comment section css selector. Not a problem, maybe worth mentioning it to moneyman")
-        
+
+            # script, scroll to button
+            self.driver.execute_script("""        
+                let like = document.getElementById("likeItButton")
+                like?.scrollIntoView({ block: "start"}); 
+            """)
             ele_wait_2 = EC.presence_of_element_located((By.CSS_SELECTOR, "#likeItButton"))
             WebDriverWait(self.driver, timeout).until(ele_wait_2)
             
