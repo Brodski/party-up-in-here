@@ -20,6 +20,7 @@ from App_Configs import App_Configs
 import Creator
 import Debug_helper
 import Liker
+import Rater
 from Save_State import Save_State
 
 def setup_browser_driver() -> WebDriver:
@@ -147,6 +148,12 @@ def is_current_configs_diff_from_previous_configs(): # returns True for 1st run
         is_diff = True
     if Save_State.init['LIKE_PAGES'] != App_Configs.init['LIKE_PAGES']:
         is_diff = True
+    if Save_State.init['RATE_BOT_START'] != App_Configs.init['RATE_BOT_START']:
+        is_diff = True
+    if Save_State.init['RATE_BOT_END_BEFORE'] != App_Configs.init['RATE_BOT_END_BEFORE']:
+        is_diff = True
+    if Save_State.init['RATE_PAGE'] != App_Configs.init['RATE_PAGE']:
+        is_diff = True
     return is_diff
 
 def attempt_callback(action_class, fail_count=0):
@@ -179,7 +186,7 @@ if __name__ == "__main__":
     conf_file = "zConfig_local.conf" # default
     parser = argparse.ArgumentParser()
     parser.add_argument('--files', type=str, help='file name at local directory')
-    parser.add_argument('--which-action', type=str, choices=['create', 'like', 'debug'], help='Type of operation to perform')
+    parser.add_argument('--which-action', type=str, choices=['create', 'like', 'rate', 'debug'], help='Type of operation to perform')
 
     args = parser.parse_args()
 
@@ -210,6 +217,9 @@ if __name__ == "__main__":
             liker = Liker.Liker(browser)
             attempt_callback(liker)
             # liker.run()
+        if args.which_action == "rate":
+            rater = Rater.Rater(browser)
+            attempt_callback(rater)
     except Exception as e:
         print("An error occurred :(")
         print(f"{e}")

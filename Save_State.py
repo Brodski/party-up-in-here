@@ -12,6 +12,7 @@ class Save_State:
     init = Abstract_State.init.copy()
     create_state = Abstract_State.create_state.copy()
     liking_state = Abstract_State.liking_state.copy()
+    rating_state = Abstract_State.rating_state.copy()
 
     @classmethod
     def init_state_file(cls, filename):
@@ -36,6 +37,8 @@ class Save_State:
         file_path = f"{cls.CONFIG_DIRECTORY}/{cls.save_state_file}"
         with open(file_path, 'r') as file:
             data = yaml.safe_load(file)
+            datainit = data.get('init', {})
+
             cls.init['SELENIUM_IS_HEADLESS']    = data['init']['SELENIUM_IS_HEADLESS'] 
             cls.init['ENV']                     = data['init']['ENV'] 
             cls.init['EMAIL']                   = data['init']['EMAIL'] 
@@ -45,11 +48,18 @@ class Save_State:
             cls.init['LIKE_BOT_START']          = data['init']['LIKE_BOT_START'] 
             cls.init['LIKE_BOT_END_BEFORE']     = data['init']['LIKE_BOT_END_BEFORE'] 
             cls.init['LIKE_PAGES']              = data['init']['LIKE_PAGES']
+            
+            # anachronistic coding/im-lazy
+            cls.init['RATE_BOT_START']          = datainit.get('RATE_BOT_START', None)
+            cls.init['RATE_BOT_END_BEFORE']     = datainit.get('RATE_BOT_END_BEFORE', None)
+            cls.init['RATE_PAGE']               = datainit.get('RATE_PAGE', None)
+
             cls.create_state['email_index_finished'] = data['create_state']['email_index_finished']
             cls.liking_state['email_index_finished'] = data['liking_state']['email_index_finished']
-            # print("    Save_State - file_into_this() - App_Configs.init", cls.init)
-            # print("    Save_State - file_into_this() - App_Configs.create_state", cls.create_state)
-            # print("    Save_State - file_into_this() - App_Configs.liking_state", cls.liking_state)
+            cls.rating_state['email_index_finished'] = data['rating_state']['email_index_finished'] if data.get('rating_state', None) else None
+
+            # cls.rating_state['email_index_finished'] = data['rating_state']['email_index_finished']
+
         return data        
 
     @classmethod
@@ -61,8 +71,8 @@ class Save_State:
         yaml_data['init'] = App_Configs.init
         yaml_data['create_state'] = App_Configs.create_state
         yaml_data['liking_state'] = App_Configs.liking_state
-        # print(yaml_data)
-        # print("")
+        yaml_data['rating_state'] = App_Configs.rating_state
+
         yaml_content = yaml.dump(yaml_data, default_flow_style=False)
         file_path = f"{cls.CONFIG_DIRECTORY}/{cls.save_state_file}"
         with open(file_path, 'w') as file:
@@ -82,8 +92,13 @@ class Save_State:
         App_Configs.init['LIKE_BOT_START']          = cls.init['LIKE_BOT_START']
         App_Configs.init['LIKE_BOT_END_BEFORE']     = cls.init['LIKE_BOT_END_BEFORE']
         App_Configs.init['LIKE_PAGES']              = cls.init['LIKE_PAGES']
+        App_Configs.init['RATE_BOT_START']          = cls.init['RATE_BOT_START']
+        App_Configs.init['RATE_BOT_END_BEFORE']     = cls.init['RATE_BOT_END_BEFORE']
+        App_Configs.init['RATE_PAGE']               = cls.init['RATE_PAGE']
+
         App_Configs.create_state['email_index_finished'] = cls.create_state['email_index_finished']
         App_Configs.liking_state['email_index_finished'] = cls.liking_state['email_index_finished']
+        App_Configs.rating_state['email_index_finished'] = cls.rating_state['email_index_finished']
 
     @classmethod
     def _is_file_exists(cls):

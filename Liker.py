@@ -1,54 +1,33 @@
 from __future__ import unicode_literals
-import random
+from App_Configs import App_Configs
 from bs4 import BeautifulSoup
+from Save_State import Save_State
 from selenium import webdriver
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.common.exceptions import UnexpectedAlertPresentException, NoAlertPresentException
+from selenium.webdriver import ActionChains
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.actions.action_builder import ActionBuilder
+from selenium.webdriver.common.actions.mouse_button import MouseButton
+from selenium.webdriver.common.alert import Alert
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 from selenium.webdriver.firefox.service import Service as FirefoxService
-from selenium.webdriver import ActionChains
-from selenium.webdriver.common.actions.action_builder import ActionBuilder
-from selenium.webdriver.common.actions.mouse_button import MouseButton
-from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.webdriver import WebDriver
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 from typing import List
+from Utils import Utils
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
-from selenium.webdriver.firefox.webdriver import WebDriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import UnexpectedAlertPresentException, NoAlertPresentException
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
-from selenium.webdriver.common.alert import Alert
-# import config_varz
 import os
+import random
 import re
 import time
-from App_Configs import App_Configs
-from Save_State import Save_State
 
-def rng_wait():
-    return random.uniform(0.1, 0.7)
 
 class Liker:
-
-    cookie_COPPA = {
-        'name': 'needCOPPA',
-        'value': 'false',
-        'domain': '.webtoons.com'
-    }
-    cookie_cm_agr = {
-        'name': 'cm_agr',
-        'value': 'false',
-        'domain': '.webtoons.com'
-    }
-    cookie_cm_lgr = {
-        'name': 'cm_lgr',
-        'value': 'false',
-        'domain': '.webtoons.com'
-    }
-
 
     def __init__(self, driver: WebDriver, **kwargs):
         print("####################################################")
@@ -74,7 +53,8 @@ class Liker:
         print("##################################################")
         for i in range (self.like_start, self.like_end_before):
             print(f'---------{i}--------')
-            self.do_login(i)
+            # self.do_login(i)
+            Utils.do_login(self.driver, self.email, self.pw, i)
             for page in self.page_urls:
                 print("Liking: ", page)
                 self.send_like(page)
@@ -83,59 +63,57 @@ class Liker:
             self.driver.delete_all_cookies()
         print("DONE!")
 
-    def do_login(self, count):
-        login_page = "https://www.webtoons.com/member/login"
-        timeout = 10
-        username = self.email.split('@')[0]
-        domain   = self.email.split('@')[1]
+    # def do_login(self, count):
+    #     login_page = "https://www.webtoons.com/member/login"
+    #     timeout = 10
+    #     username = self.email.split('@')[0]
+    #     domain   = self.email.split('@')[1]
 
-        email_w_count = f"{username}+{count}@{domain}" # supergera+12@gmail.com
+    #     email_w_count = f"{username}+{count}@{domain}" # supergera+12@gmail.com
 
-        self.driver.get(login_page)
+    #     self.driver.get(login_page)
         
-        cookie_sess = self.driver.get_cookie("NEO_SES")
-        current_url = self.driver.current_url
-        if cookie_sess or current_url == "https://www.webtoons.com/en/":
-            print(f"We are already logged in")
-            return
+    #     cookie_sess = self.driver.get_cookie("NEO_SES")
+    #     current_url = self.driver.current_url
+    #     if cookie_sess or current_url == "https://www.webtoons.com/en/":
+    #         print(f"We are already logged in")
+    #         return
 
-        self.driver.add_cookie(self.cookie_COPPA)
+    #     self.driver.add_cookie(self.cookie_COPPA)
 
-        # 1 Wait for client render -.-
-        login_email_btn_wait = EC.presence_of_element_located((By.CSS_SELECTOR, "._btnLoginEmail"))
-        WebDriverWait(self.driver, timeout).until(login_email_btn_wait)
+    #     # 1 Wait for client render -.-
+    #     login_email_btn_wait = EC.presence_of_element_located((By.CSS_SELECTOR, "._btnLoginEmail"))
+    #     WebDriverWait(self.driver, timeout).until(login_email_btn_wait)
 
-        # 2 click "Email" option
-        login_email_btn = self.driver.find_element(By.CSS_SELECTOR, "._btnLoginEmail")
-        login_email_btn.click()
+    #     # 2 click "Email" option
+    #     login_email_btn = self.driver.find_element(By.CSS_SELECTOR, "._btnLoginEmail")
+    #     login_email_btn.click()
 
-        # 3 Wait for client render again -.-
-        pw_btn = EC.presence_of_element_located((By.ID, "email_address"))
-        WebDriverWait(self.driver, timeout).until(pw_btn)
+    #     # 3 Wait for client render again -.-
+    #     pw_btn = EC.presence_of_element_located((By.ID, "email_address"))
+    #     WebDriverWait(self.driver, timeout).until(pw_btn)
 
-        # 4 Fillout login form
-        self.driver.execute_script("""
-            const evt2 = new Event("focus", {"view": window, "bubbles":true, "cancelable":false});
-            document.getElementById("email_password").dispatchEvent(evt2)
-        """)
+    #     # 4 Fillout login form
+    #     self.driver.execute_script("""
+    #         const evt2 = new Event("focus", {"view": window, "bubbles":true, "cancelable":false});
+    #         document.getElementById("email_password").dispatchEvent(evt2)
+    #     """)
                 
-        email_input_clickable   = self.driver.find_element(By.ID, "email_address")
-        password_clickable      = self.driver.find_element(By.ID, "email_password")
-        submit_clickable        = self.driver.find_element(By.CSS_SELECTOR, "button.login_btn.type_green._emailLoginButton")
-        ActionChains(self.driver) \
-            .click(email_input_clickable).send_keys(email_w_count).pause(rng_wait()) \
-            .click(password_clickable).send_keys(self.pw).pause(rng_wait()) \
-            .click(submit_clickable).pause(rng_wait()) \
-            .perform()
+    #     email_input_clickable   = self.driver.find_element(By.ID, "email_address")
+    #     password_clickable      = self.driver.find_element(By.ID, "email_password")
+    #     submit_clickable        = self.driver.find_element(By.CSS_SELECTOR, "button.login_btn.type_green._emailLoginButton")
+    #     ActionChains(self.driver) \
+    #         .click(email_input_clickable).send_keys(email_w_count).pause(rng_wait()) \
+    #         .click(password_clickable).send_keys(self.pw).pause(rng_wait()) \
+    #         .click(submit_clickable).pause(rng_wait()) \
+    #         .perform()
 
-        print("LIKER - LOGIN COMPLETE: ", email_w_count)
-        time.sleep(0.1)
+    #     print("LIKER - LOGIN COMPLETE: ", email_w_count)
+    #     time.sleep(0.1)
 
     def send_like(self, page_url):
         timeout = 3
-        self.driver.add_cookie(self.cookie_cm_lgr)
-        self.driver.add_cookie(self.cookie_cm_agr)
-        self.driver.get(page_url)
+        Utils.go_to_page_gaurdrails_age(self.driver, page_url)
 
         try:
             self.accept_mysterious_alert()
@@ -168,7 +146,7 @@ class Liker:
                     subscribe.click();
                 }
             """)
-            # time.sleep(rng_wait())
+            # time.sleep(Utils.rng_wait())
             time.sleep(0.2)
         except UnexpectedAlertPresentException as e:
             print(f"Unexpected alert detected: {e}")
