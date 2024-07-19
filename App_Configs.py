@@ -33,8 +33,8 @@ class App_Configs:
                 cls.init['LIKE_BOT_END_BEFORE']    = int(env_vars['LIKE_BOT_END_BEFORE'])
 
                 # anachronistic coding/im-lazy
-                cls.init['RATE_BOT_START']          = int(env_vars.get('RATE_BOT_START', None))
-                cls.init['RATE_BOT_END_BEFORE']     = int(env_vars.get('RATE_BOT_END_BEFORE', None))
+                cls.init['RATE_BOT_START']          = int(env_vars.get('RATE_BOT_START')) if env_vars.get('RATE_BOT_START', None) else None
+                cls.init['RATE_BOT_END_BEFORE']     = int(env_vars.get('RATE_BOT_END_BEFORE')) if env_vars.get('RATE_BOT_END_BEFORE', None) else None
                 cls.init['RATE_PAGE']               = env_vars.get('RATE_PAGE', None)
 
                 LIKE_PAGES_aux = re.sub(r'\s+', "", env_vars['LIKE_PAGES']).split(',')
