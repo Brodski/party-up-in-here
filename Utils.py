@@ -1,14 +1,20 @@
 
+from datetime import datetime
+import os
 import random
 import time
-from selenium.webdriver.firefox.webdriver import WebDriver
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
-
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.common.exceptions import UnexpectedAlertPresentException, NoAlertPresentException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.actions.action_builder import ActionBuilder
 from selenium.webdriver.common.actions.mouse_button import MouseButton
+from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.webdriver import WebDriver
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.alert import Alert
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 
 from typing import List
 
@@ -64,6 +70,8 @@ class Utils:
 
     @classmethod
     def do_login(self, driver: WebDriver, email: str, pw: str, count: str):
+        Utils.accept_mysterious_alert(driver)
+
         login_page = "https://www.webtoons.com/member/login"
         timeout = 10
         username = email.split('@')[0]
@@ -102,11 +110,39 @@ class Utils:
         email_input_clickable   = driver.find_element(By.ID, "email_address")
         password_clickable      = driver.find_element(By.ID, "email_password")
         submit_clickable        = driver.find_element(By.CSS_SELECTOR, "button.login_btn.type_green._emailLoginButton")
+        login_form              = driver.find_element(By.CSS_SELECTOR, "#formLogin") # get form element before we leave the page, we'll use to confirm we have left/logged in 
+
         ActionChains(driver) \
             .click(email_input_clickable).send_keys(email_w_count).pause(Utils.rng_wait()) \
             .click(password_clickable).send_keys(pw).pause(Utils.rng_wait()) \
-            .click(submit_clickable).pause(Utils.rng_wait()) \
+            .click(submit_clickable) \
             .perform()
+            # .click(submit_clickable).pause(Utils.rng_wait()) \
 
+        # Wait for the URL to change. The page is likely redirected 
+        # alternatively we can use EC.staleness_of(element). Waits until element is gone. # WebDriverWait(driver, 10).until(EC.staleness_of(login_form))
+        WebDriverWait(driver, 10).until(EC.url_changes("https://www.webtoons.com/member/login"))
         print("LOGIN COMPLETE: ", email_w_count)
-        time.sleep(0.1)
+
+    @staticmethod
+    def take_screenshot_err(browser: WebDriver):
+        timestamp = datetime.now().strftime(r"%Y-%m-%d_%Hh%Mm%Ss") #'2024-07-16_05h12m10s'
+        screenshot_path = os.path.join("screenshots", f"error_{timestamp}.png")
+        browser.get_screenshot_as_file(screenshot_path)
+        screenshot_path_full = os.path.join("screenshots", f"error_full_{timestamp}.png")
+        browser.get_full_page_screenshot_as_file(screenshot_path_full)
+        print(f"Took a screenshot @ {screenshot_path}")
+
+    @staticmethod
+    def handle_unexpected_alert(driver):
+        try:
+            Alert(driver).accept() # or alert.accept()
+        except NoAlertPresentException:
+            pass
+
+    @staticmethod
+    def accept_mysterious_alert(driver): # shows up randomly 
+        try:
+            Alert(driver).accept()
+        except NoAlertPresentException:
+            pass

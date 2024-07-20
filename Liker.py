@@ -33,14 +33,13 @@ class Liker:
         print("####################################################")
         print("##########        Liker - init()         ##########")
         print("####################################################")
-        self.driver = driver
+        self.driver               = driver
         self.email                = App_Configs.init['EMAIL']
         self.pw                   = App_Configs.init['PWORD']
         self.like_start           = App_Configs.init['LIKE_BOT_START']
         self.like_end_before      = App_Configs.init['LIKE_BOT_END_BEFORE']
         self.page_urls: List[str] = App_Configs.init['LIKE_PAGES']
-        if App_Configs.liking_state['email_index_finished']:
-            self.like_start = App_Configs.liking_state['email_index_finished'] + 1
+
         print("     Liker - email           ", self.email)
         print("     Liker - pw              ", self.pw)
         print("     Liker - like_start      ", self.like_start)
@@ -51,9 +50,9 @@ class Liker:
         print("##################################################")
         print("##########        Liker - run()        ###########")
         print("##################################################")
-        for i in range (self.like_start, self.like_end_before):
+        start = App_Configs.liking_state['email_index_finished'] if App_Configs.liking_state['email_index_finished'] else self.like_start
+        for i in range (start, self.like_end_before):  # Since we have the 'retry' code in attempt_callback(), we have to get from App_Configs
             print(f'---------{i}--------')
-            # self.do_login(i)
             Utils.do_login(self.driver, self.email, self.pw, i)
             for page in self.page_urls:
                 print("Liking: ", page)
@@ -63,104 +62,60 @@ class Liker:
             self.driver.delete_all_cookies()
         print("DONE!")
 
-    # def do_login(self, count):
-    #     login_page = "https://www.webtoons.com/member/login"
-    #     timeout = 10
-    #     username = self.email.split('@')[0]
-    #     domain   = self.email.split('@')[1]
-
-    #     email_w_count = f"{username}+{count}@{domain}" # supergera+12@gmail.com
-
-    #     self.driver.get(login_page)
-        
-    #     cookie_sess = self.driver.get_cookie("NEO_SES")
-    #     current_url = self.driver.current_url
-    #     if cookie_sess or current_url == "https://www.webtoons.com/en/":
-    #         print(f"We are already logged in")
-    #         return
-
-    #     self.driver.add_cookie(self.cookie_COPPA)
-
-    #     # 1 Wait for client render -.-
-    #     login_email_btn_wait = EC.presence_of_element_located((By.CSS_SELECTOR, "._btnLoginEmail"))
-    #     WebDriverWait(self.driver, timeout).until(login_email_btn_wait)
-
-    #     # 2 click "Email" option
-    #     login_email_btn = self.driver.find_element(By.CSS_SELECTOR, "._btnLoginEmail")
-    #     login_email_btn.click()
-
-    #     # 3 Wait for client render again -.-
-    #     pw_btn = EC.presence_of_element_located((By.ID, "email_address"))
-    #     WebDriverWait(self.driver, timeout).until(pw_btn)
-
-    #     # 4 Fillout login form
-    #     self.driver.execute_script("""
-    #         const evt2 = new Event("focus", {"view": window, "bubbles":true, "cancelable":false});
-    #         document.getElementById("email_password").dispatchEvent(evt2)
-    #     """)
-                
-    #     email_input_clickable   = self.driver.find_element(By.ID, "email_address")
-    #     password_clickable      = self.driver.find_element(By.ID, "email_password")
-    #     submit_clickable        = self.driver.find_element(By.CSS_SELECTOR, "button.login_btn.type_green._emailLoginButton")
-    #     ActionChains(self.driver) \
-    #         .click(email_input_clickable).send_keys(email_w_count).pause(rng_wait()) \
-    #         .click(password_clickable).send_keys(self.pw).pause(rng_wait()) \
-    #         .click(submit_clickable).pause(rng_wait()) \
-    #         .perform()
-
-    #     print("LIKER - LOGIN COMPLETE: ", email_w_count)
-    #     time.sleep(0.1)
-
     def send_like(self, page_url):
         timeout = 3
         Utils.go_to_page_gaurdrails_age(self.driver, page_url)
 
+        # Wait for the comment section's textarea thing. B/c thats what humans do.
         try:
-            self.accept_mysterious_alert()
+            ele_wait = EC.presence_of_element_located((By.CSS_SELECTOR, "#comment_module .wcc_Editor__root"))
+            WebDriverWait(self.driver, timeout).until(ele_wait)
+        except Exception: 
+            print("Warning - couldnt find comment section css selector. Not a problem, maybe worth mentioning it to moneyman")
 
-            # Wait for the comment section's textarea thing. B/c thats what humans do.
-            try:
-                ele_wait = EC.presence_of_element_located((By.CSS_SELECTOR, "#comment_module .wcc_Editor__root"))
-                WebDriverWait(self.driver, timeout).until(ele_wait)
-            except Exception: 
-                print("Warning - couldnt find comment section css selector. Not a problem, maybe worth mentioning it to moneyman")
+        # script, scroll to button
+        self.driver.execute_script("""        
+            let like = document.getElementById("likeItButton")
+            like?.scrollIntoView({ block: "start"}); 
+        """)
+        ele_wait_2 = EC.presence_of_element_located((By.CSS_SELECTOR, "#likeItButton"))
+        WebDriverWait(self.driver, timeout).until(ele_wait_2)
+        time.sleep(.05)
+        
+        # No purpose, just log
+        is_liked = len(self.driver.find_elements(By.CSS_SELECTOR, "#likeItButton .ico_like2._btnLike.on")) > 0
+        if is_liked:
+            print("💩 We already liked this page")
+            return
 
-            # script, scroll to button
-            self.driver.execute_script("""        
-                let like = document.getElementById("likeItButton")
-                like?.scrollIntoView({ block: "start"}); 
-            """)
-            ele_wait_2 = EC.presence_of_element_located((By.CSS_SELECTOR, "#likeItButton"))
-            WebDriverWait(self.driver, timeout).until(ele_wait_2)
-            
-            time.sleep(.05)
-            self.driver.execute_script("""     
-                let like = document.getElementById("likeItButton");
-                let subscribe = document.getElementById("footer_favorites");
-                let isLikeOn = like.getElementsByClassName("_btnLike")[0].classList.contains("on");
-                let isSubbedOn = subscribe.classList.contains("on");
-                if (!isLikeOn) {
-                    like.click();
-                }
-                if (!isSubbedOn) {
-                    subscribe.click();
-                }
-            """)
-            # time.sleep(Utils.rng_wait())
-            time.sleep(0.2)
-        except UnexpectedAlertPresentException as e:
-            print(f"Unexpected alert detected: {e}")
-            self.handle_unexpected_alert()
-            pass
+        self.driver.execute_script("""     
+            let like = document.getElementById("likeItButton");
+            let subscribe = document.getElementById("footer_favorites");
+            let isLikeOn = like.getElementsByClassName("_btnLike")[0].classList.contains("on");
+            let isSubbedOn = subscribe.classList.contains("on");
+            if (!isLikeOn) {
+                like.click();
+            }
+            if (!isSubbedOn) {
+                subscribe.click();
+            }
+        """)
+        # time.sleep(Utils.rng_wait())
+        time.sleep(0.2)
 
-    def handle_unexpected_alert(self):
-        try:
-            Alert(self.driver).accept() # or alert.accept()
-        except NoAlertPresentException:
-            pass
+        # except UnexpectedAlertPresentException as e:
+        #     print(f"Unexpected alert detected: {e}")
+        #     self.handle_unexpected_alert()
+        #     pass
+
+    # def handle_unexpected_alert(self):
+    #     try:
+    #         Alert(self.driver).accept() # or alert.accept()
+    #     except NoAlertPresentException:
+    #         pass
     
-    def accept_mysterious_alert(self): # shows up randomly 
-        try:
-            Alert(self.driver).accept()
-        except NoAlertPresentException:
-            pass
+    # def accept_mysterious_alert(self): # shows up randomly 
+    #     try:
+    #         Alert(self.driver).accept()
+    #     except NoAlertPresentException:
+    #         pass

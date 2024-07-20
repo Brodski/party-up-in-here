@@ -38,15 +38,12 @@ class Rater:
         print("####################################################")
         print("##########        Rater - init()         ##########")
         print("####################################################")
-        self.driver = driver
+        self.driver               = driver
         self.email                = App_Configs.init['EMAIL']
         self.pw                   = App_Configs.init['PWORD']
         self.rate_start           = App_Configs.init['RATE_BOT_START']
         self.rate_end_before      = App_Configs.init['RATE_BOT_END_BEFORE']
         self.rate_page            = App_Configs.init['RATE_PAGE']
-
-        if App_Configs.rating_state['email_index_finished']:
-            self.rate_start = App_Configs.rating_state['email_index_finished'] + 1
 
         print("     Rater - email           ", self.email)
         print("     Rater - pw              ", self.pw)
@@ -58,7 +55,9 @@ class Rater:
         print("##################################################")
         print("##########        Rater - run()        ###########")
         print("##################################################")
-        for i in range (self.rate_start, self.rate_end_before):
+        start = App_Configs.rating_state['email_index_finished'] if App_Configs.rating_state['email_index_finished'] else self.rate_start
+
+        for i in range (start, self.rate_end_before):  # Since we have the 'retry' code in attempt_callback(), we have to get from App_Configs
             print(f'---------{i}--------')
             Utils.do_login(self.driver, self.email, self.pw, i)
             self.send_rate()
@@ -69,18 +68,24 @@ class Rater:
 
     def send_rate(self):
         Utils.go_to_page_gaurdrails_age(self.driver, self.rate_page)
+        time.sleep(0.55) # they send whethere  you rated or not back to you later
+
+        # 1 Click "Rate"
         rate_btn = self.driver.find_element(By.CSS_SELECTOR, "#_rateButton")
         rate_btn.click()
+        time.sleep(0.15) # they send whethere  you rated or not back to you later
         
-        
+        # 2.A Leave if already rated
         rated_already_msg = self.driver.find_element(By.CSS_SELECTOR, ".ly_grade.retry")
         if rated_already_msg.value_of_css_property('display') == "block":
             print("🧐 We already rated it apparently")
             yes_btn = self.driver.find_element(By.CSS_SELECTOR, ".lnk_cncl[title='No']")
             yes_btn.click()
             return
+        # 2.B Rate it.
         else:
             send_btn = self.driver.find_element(By.CSS_SELECTOR, ".grade_btn a[title='Send']")
             send_btn.click()
-        print("✅ Rated succesfully")
+        print("✅ Rated probably succesfully")
+        time.sleep(0.1)
         pass

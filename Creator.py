@@ -50,7 +50,7 @@ class Creator:
         print("     Creator - create_end_before ", self.create_end_before)
 
     def run(self):
-        for i in range (self.create_start, self.create_end_before):
+        for i in range (App_Configs.init['CREATE_BOT_START'], self.create_end_before):
             print(i)
             self.create_accounts(i)
             App_Configs.create_state['email_index_finished'] = i

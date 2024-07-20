@@ -10,6 +10,13 @@ from selenium.webdriver.firefox.webdriver import WebDriver
 from typing import List
 from webdriver_manager.core.driver_cache import DriverCacheManager
 from webdriver_manager.firefox import GeckoDriverManager
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.common.exceptions import UnexpectedAlertPresentException, NoAlertPresentException
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.alert import Alert
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 import argparse
 import os
 import re
@@ -21,6 +28,7 @@ import Creator
 import Debug_helper
 import Liker
 import Rater
+from Utils import Utils
 from Save_State import Save_State
 
 def setup_browser_driver() -> WebDriver:
@@ -70,6 +78,7 @@ def setup_browser_driver() -> WebDriver:
     return browser
 
 def configure_stylus(browser: WebDriver):
+    timeout = 3
     css = """
         body {
             overflow: auto !important;
@@ -81,6 +90,9 @@ def configure_stylus(browser: WebDriver):
     """
     browser.get("about:addons")
 
+    # btn 1
+    extensions_btn_x = EC.presence_of_element_located((By.CSS_SELECTOR, '[data-l10n-id="addon-category-extension"]'))
+    WebDriverWait(browser, timeout).until(extensions_btn_x)    
     extensions_btn = browser.find_element(By.CSS_SELECTOR, '[data-l10n-id="addon-category-extension"]')
     extensions_btn.click()
 
@@ -101,6 +113,9 @@ def configure_stylus(browser: WebDriver):
     new_tab_handle = window_handles[-1]
     browser.switch_to.window(new_tab_handle)
 
+    # btn 2
+    write_new_style_btn_x = EC.presence_of_element_located((By.CSS_SELECTOR, 'button#add-style-label'))
+    WebDriverWait(browser, timeout).until(write_new_style_btn_x)
     write_new_style_btn = browser.find_element(By.CSS_SELECTOR,'button#add-style-label')
     write_new_style_btn.click()
 
@@ -156,12 +171,17 @@ def is_current_configs_diff_from_previous_configs(): # returns True for 1st run
         is_diff = True
     return is_diff
 
+# this can be better. I need to do a yield trick inside of run() i think?
 def attempt_callback(action_class, fail_count=0):
-    MAX_RETRY = 3
+    MAX_RETRY = 6
     while fail_count < MAX_RETRY:
         try:
             action_class.run()
             return
+        except UnexpectedAlertPresentException as e:
+            print(f"Unexpected alert detected: {e}")
+            Utils.handle_unexpected_alert(action_class.driver)
+            continue
         except KeyboardInterrupt:
             print("Caught KeyboardInterrupt, exiting gracefully")
             exit(1)
@@ -169,17 +189,9 @@ def attempt_callback(action_class, fail_count=0):
             fail_count = fail_count + 1
             traceback.print_exc()
             print(f"Failed. Trying again... (Exception name: {e.__class__.__name__})")
-            take_screenshot_err(action_class.driver) 
+            Utils.take_screenshot_err(action_class.driver) 
             if fail_count >= MAX_RETRY:
                 print(f"Failed after {fail_count} attempts. Ending. 🙀😫😵")
-
-def take_screenshot_err(browser: WebDriver):
-    timestamp = datetime.now().strftime(r"%Y-%m-%d_%Hh%Mm%Ss") #'2024-07-16_05h12m10s'
-    screenshot_path = os.path.join("screenshots", f"error_{timestamp}.png")
-    browser.get_screenshot_as_file(screenshot_path)
-    screenshot_path_full = os.path.join("screenshots", f"error_full_{timestamp}.png")
-    browser.get_full_page_screenshot_as_file(screenshot_path_full)
-    print(f"Took a screenshot @ {screenshot_path}")
 
 if __name__ == "__main__":
 
@@ -216,7 +228,6 @@ if __name__ == "__main__":
         if args.which_action == "like":
             liker = Liker.Liker(browser)
             attempt_callback(liker)
-            # liker.run()
         if args.which_action == "rate":
             rater = Rater.Rater(browser)
             attempt_callback(rater)
@@ -224,7 +235,7 @@ if __name__ == "__main__":
         print("An error occurred :(")
         print(f"{e}")
         print(traceback.format_exc())
-        take_screenshot_err(browser)
+        Utils.take_screenshot_err(browser)
 
     finally:
         if browser:
