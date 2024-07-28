@@ -7,6 +7,7 @@ class App_Configs:
     init = Abstract_State.init.copy()
     create_state = Abstract_State.create_state.copy()
     liking_state = Abstract_State.liking_state.copy()
+    rating_state = Abstract_State.rating_state.copy()
 
     CONFIG_DIRECTORY = "./configs"
 
@@ -20,6 +21,7 @@ class App_Configs:
                 env_vars = dotenv_values(f"{cls.CONFIG_DIRECTORY}/{file}")  
                 cls.create_state['email_index_finished'] = None
                 cls.liking_state['email_index_finished'] = None
+                cls.rating_state['email_index_finished'] = None
                 
                 cls.init['SELENIUM_IS_HEADLESS']   = env_vars['SELENIUM_IS_HEADLESS']
                 cls.init['ENV']                    = env_vars['ENV']
@@ -29,6 +31,11 @@ class App_Configs:
                 cls.init['CREATE_BOT_END_BEFORE']  = int(env_vars['CREATE_BOT_END_BEFORE'])
                 cls.init['LIKE_BOT_START']         = int(env_vars['LIKE_BOT_START'])
                 cls.init['LIKE_BOT_END_BEFORE']    = int(env_vars['LIKE_BOT_END_BEFORE'])
+
+                # anachronistic coding/im-lazy
+                cls.init['RATE_BOT_START']          = int(env_vars.get('RATE_BOT_START')) if env_vars.get('RATE_BOT_START', None) else None
+                cls.init['RATE_BOT_END_BEFORE']     = int(env_vars.get('RATE_BOT_END_BEFORE')) if env_vars.get('RATE_BOT_END_BEFORE', None) else None
+                cls.init['RATE_PAGE']               = env_vars.get('RATE_PAGE', None)
 
                 LIKE_PAGES_aux = re.sub(r'\s+', "", env_vars['LIKE_PAGES']).split(',')
                 LIKE_PAGES_aux = LIKE_PAGES_aux if LIKE_PAGES_aux[-1] != "" else LIKE_PAGES_aux[:-1] # incase last ele ends with ,
@@ -49,14 +56,7 @@ class App_Configs:
                 data[attr] = value
                 # print("create_new_file - attr,value:", attr, value)
 
-        # data['init'] = {}
-        # data['create_state'] = {}
-        # data['create_state']['email_index_finished'] = None
-        # data['liking_state'] = {}
-        # data['liking_state']['email_index_finished'] = None
-        # data['liking_state']['at_page'] = None
 
         file_path = f"{cls.CONFIG_DIRECTORY}/{file_name}"
         with open(file_path, 'w') as file:
             yaml.dump(data, file, sort_keys=False, default_flow_style=False, indent=2)
-        # print("App_Configs - CREATED SAVE STATE")

@@ -10,6 +10,14 @@ from selenium.webdriver.firefox.webdriver import WebDriver
 from typing import List
 from webdriver_manager.core.driver_cache import DriverCacheManager
 from webdriver_manager.firefox import GeckoDriverManager
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.common.exceptions import UnexpectedAlertPresentException, NoAlertPresentException
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.alert import Alert
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from dotenv import dotenv_values
 import argparse
 import os
 import re
@@ -20,15 +28,27 @@ from App_Configs import App_Configs
 import Creator
 import Debug_helper
 import Liker
+import Rater
+from Utils import Utils
 from Save_State import Save_State
+from Cloudwatch import Cloudwatch
+from dotenv import load_dotenv
+
+load_dotenv()
+os.environ['AWS_ACCESS_KEY_ID'] = os.getenv('AWS_ACCESS_KEY_ID')
+os.environ['AWS_SECRET_ACCESS_KEY'] = os.getenv('AWS_SECRET_ACCESS_KEY')
+
+def logger():
+    pass
+logger = Cloudwatch.log
 
 def setup_browser_driver() -> WebDriver:
     options = Options()
     if App_Configs.init['SELENIUM_IS_HEADLESS'] == "True":
         options.add_argument('--headless')
         os.environ["MOZ_HEADLESS"] = "1"
-        
-
+    
+    options.binary_location = os.path.abspath(os.getenv('FIREFOX_PATH'))
     options.add_argument('--autoplay-policy=user-required') 
     options.add_argument("--width=1750")
     options.add_argument("--height=1080")
@@ -53,7 +73,6 @@ def setup_browser_driver() -> WebDriver:
 
     extension_path = os.path.abspath('extensions/stylus.xpi')
     options.profile = firefox_profile
-    # service = FirefoxService(executable_path=GeckoDriverManager().install())
     service = get_or_install_service()
 
 
@@ -69,6 +88,7 @@ def setup_browser_driver() -> WebDriver:
     return browser
 
 def configure_stylus(browser: WebDriver):
+    timeout = 3
     css = """
         body {
             overflow: auto !important;
@@ -80,6 +100,9 @@ def configure_stylus(browser: WebDriver):
     """
     browser.get("about:addons")
 
+    # btn 1
+    extensions_btn_x = EC.presence_of_element_located((By.CSS_SELECTOR, '[data-l10n-id="addon-category-extension"]'))
+    WebDriverWait(browser, timeout).until(extensions_btn_x)    
     extensions_btn = browser.find_element(By.CSS_SELECTOR, '[data-l10n-id="addon-category-extension"]')
     extensions_btn.click()
 
@@ -100,6 +123,9 @@ def configure_stylus(browser: WebDriver):
     new_tab_handle = window_handles[-1]
     browser.switch_to.window(new_tab_handle)
 
+    # btn 2
+    write_new_style_btn_x = EC.presence_of_element_located((By.CSS_SELECTOR, 'button#add-style-label'))
+    WebDriverWait(browser, timeout).until(write_new_style_btn_x)
     write_new_style_btn = browser.find_element(By.CSS_SELECTOR,'button#add-style-label')
     write_new_style_btn.click()
 
@@ -115,11 +141,15 @@ def configure_stylus(browser: WebDriver):
     browser.switch_to.window(original_tab_handle)
     
     
-def get_or_install_service(retries=2, delay=3) -> FirefoxService:
-    service = FirefoxService(executable_path=GeckoDriverManager().install())
+def get_or_install_service(retries=3, delay=3) -> FirefoxService:
     for i in range(retries):
         try:
-            service = FirefoxService(executable_path=GeckoDriverManager().install())
+            executable_path=GeckoDriverManager().install()
+            logger("executable_path!?!?!", executable_path)
+            logger("os.path.exists(executable_path)???" , os.path.exists(executable_path))
+            
+            service = FirefoxService(executable_path=executable_path)
+            # service = FirefoxService(executable_path=GeckoDriverManager().install())
             # service = FirefoxService(executable_path=GeckoDriverManager(cache_manager=DriverCacheManager(valid_range=0)).install())
             return service
         except Exception as e:
@@ -147,54 +177,56 @@ def is_current_configs_diff_from_previous_configs(): # returns True for 1st run
         is_diff = True
     if Save_State.init['LIKE_PAGES'] != App_Configs.init['LIKE_PAGES']:
         is_diff = True
+    if Save_State.init['RATE_BOT_START'] != App_Configs.init['RATE_BOT_START']:
+        is_diff = True
+    if Save_State.init['RATE_BOT_END_BEFORE'] != App_Configs.init['RATE_BOT_END_BEFORE']:
+        is_diff = True
+    if Save_State.init['RATE_PAGE'] != App_Configs.init['RATE_PAGE']:
+        is_diff = True
     return is_diff
 
+# this can be better. I need to do a yield trick inside of run() i think?
 def attempt_callback(action_class, fail_count=0):
-    MAX_RETRY = 3
+    MAX_RETRY = 6
     while fail_count < MAX_RETRY:
         try:
             action_class.run()
             return
+        except UnexpectedAlertPresentException as e:
+            logger(f"Unexpected alert detected: {e}")
+            Utils.handle_unexpected_alert(action_class.driver)
+            continue
         except KeyboardInterrupt:
-            print("Caught KeyboardInterrupt, exiting gracefully")
+            logger("Caught KeyboardInterrupt, exiting gracefully")
             exit(1)
         except Exception as e:
             fail_count = fail_count + 1
             traceback.print_exc()
-            print(f"Failed. Trying again... (Exception name: {e.__class__.__name__})")
-            take_screenshot_err(action_class.driver) 
+            logger(f"Failed. Trying again... (Exception name: {e.__class__.__name__})")
+            Utils.take_screenshot_err(action_class.driver) 
             if fail_count >= MAX_RETRY:
-                print(f"Failed after {fail_count} attempts. Ending. 🙀😫😵")
-
-def take_screenshot_err(browser: WebDriver):
-    timestamp = datetime.now().strftime(r"%Y-%m-%d_%Hh%Mm%Ss") #'2024-07-16_05h12m10s'
-    screenshot_path = os.path.join("screenshots", f"error_{timestamp}.png")
-    browser.get_screenshot_as_file(screenshot_path)
-    screenshot_path_full = os.path.join("screenshots", f"error_full_{timestamp}.png")
-    browser.get_full_page_screenshot_as_file(screenshot_path_full)
-    print(f"Took a screenshot @ {screenshot_path}")
+                logger(f"Failed after {fail_count} attempts. Ending. 🙀😫😵")
 
 if __name__ == "__main__":
-
     conf_file = "zConfig_local.conf" # default
     parser = argparse.ArgumentParser()
     parser.add_argument('--files', type=str, help='file name at local directory')
-    parser.add_argument('--which-action', type=str, choices=['create', 'like', 'debug'], help='Type of operation to perform')
+    parser.add_argument('--which-action', type=str, choices=['create', 'like', 'rate', 'debug'], help='Type of operation to perform')
 
     args = parser.parse_args()
 
     if args.files == None:
-        print('\nNo file present in args. You need the flag: --file myfile.conf')
+        logger('\nNo file present in args. You need the flag: --file myfile.conf')
         exit(1)
     conf_file = str(args.files)
     App_Configs(conf_file)
     state_filename = App_Configs.prep_state_filename(conf_file)
     Save_State.init_state_file(state_filename)
     if is_current_configs_diff_from_previous_configs():
-        print("\n main() - Config file changed from last time. \n")
+        logger("\n main() - Config file changed from last time. \n")
         App_Configs.create_new_file(Save_State.save_state_file)
     else:
-        print("\n main() - Config file is the SAME from last time \n")
+        logger("\n main() - Config file is the SAME from last time \n")
         Save_State.state_into_app_configs()
 
     browser: WebDriver = setup_browser_driver()
@@ -209,17 +241,19 @@ if __name__ == "__main__":
         if args.which_action == "like":
             liker = Liker.Liker(browser)
             attempt_callback(liker)
-            # liker.run()
+        if args.which_action == "rate":
+            rater = Rater.Rater(browser)
+            attempt_callback(rater)
     except Exception as e:
-        print("An error occurred :(")
-        print(f"{e}")
-        print(traceback.format_exc())
-        take_screenshot_err(browser)
+        logger("An error occurred :(")
+        logger(f"{e}")
+        logger(traceback.format_exc())
+        Utils.take_screenshot_err(browser)
 
     finally:
         if browser:
             browser.quit()
-    print("--- ENDING ---")
+    logger("--- ENDING ---")
 
 
 

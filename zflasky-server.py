@@ -17,6 +17,9 @@ html_template = """
 </body>
 <script>
     window.alert("eat myass")
+    setTimeout( () => {
+        window.location.href = "https://www.google.com"
+    }, 100)
 </script>
 </html>
 """
