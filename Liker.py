@@ -25,14 +25,19 @@ import os
 import random
 import re
 import time
+import datetime
+from Cloudwatch import Cloudwatch
 
+def logger():
+    pass
+logger = Cloudwatch.log
 
 class Liker:
 
     def __init__(self, driver: WebDriver, **kwargs):
-        print("####################################################")
-        print("##########        Liker - init()         ##########")
-        print("####################################################")
+        logger("####################################################")
+        logger("##########        Liker - init()         ##########")
+        logger("####################################################")
         self.driver               = driver
         self.email                = App_Configs.init['EMAIL']
         self.pw                   = App_Configs.init['PWORD']
@@ -40,27 +45,27 @@ class Liker:
         self.like_end_before      = App_Configs.init['LIKE_BOT_END_BEFORE']
         self.page_urls: List[str] = App_Configs.init['LIKE_PAGES']
 
-        print("     Liker - email           ", self.email)
-        print("     Liker - pw              ", self.pw)
-        print("     Liker - like_start      ", self.like_start)
-        print("     Liker - like_end_before ", self.like_end_before)
-        print("     Liker - page_urls     \n", "\n".join(self.page_urls))
+        logger("     Liker - email           ", self.email)
+        logger("     Liker - pw              ", self.pw)
+        logger("     Liker - like_start      ", self.like_start)
+        logger("     Liker - like_end_before ", self.like_end_before)
+        logger("     Liker - page_urls     \n", "\n".join(self.page_urls))
 
     def run(self):
-        print("##################################################")
-        print("##########        Liker - run()        ###########")
-        print("##################################################")
+        logger("##################################################")
+        logger("##########        Liker - run()        ###########")
+        logger("##################################################")
         start = App_Configs.liking_state['email_index_finished'] if App_Configs.liking_state['email_index_finished'] else self.like_start
         for i in range (start, self.like_end_before):  # Since we have the 'retry' code in attempt_callback(), we have to get from App_Configs
-            print(f'---------{i}--------')
+            logger(f'---------{i}--------')
             Utils.do_login(self.driver, self.email, self.pw, i)
             for page in self.page_urls:
-                print("Liking: ", page)
+                logger("Liking: ", page)
                 self.send_like(page)
                 App_Configs.liking_state['email_index_finished'] = i
                 Save_State.update_state_file()
             self.driver.delete_all_cookies()
-        print("DONE!")
+        logger("DONE!")
 
     def send_like(self, page_url):
         timeout = 3
@@ -71,7 +76,7 @@ class Liker:
             ele_wait = EC.presence_of_element_located((By.CSS_SELECTOR, "#comment_module .wcc_Editor__root"))
             WebDriverWait(self.driver, timeout).until(ele_wait)
         except Exception: 
-            print("Warning - couldnt find comment section css selector. Not a problem, maybe worth mentioning it to moneyman")
+            logger("Warning - couldnt find comment section css selector. Not a problem, maybe worth mentioning it to moneyman")
 
         # script, scroll to button
         self.driver.execute_script("""        
@@ -85,7 +90,7 @@ class Liker:
         # No purpose, just log
         is_liked = len(self.driver.find_elements(By.CSS_SELECTOR, "#likeItButton .ico_like2._btnLike.on")) > 0
         if is_liked:
-            print("💩 We already liked this page")
+            logger("💩 We already liked this page")
             return
 
         self.driver.execute_script("""     
@@ -104,7 +109,7 @@ class Liker:
         time.sleep(0.2)
 
         # except UnexpectedAlertPresentException as e:
-        #     print(f"Unexpected alert detected: {e}")
+        #     logger(f"Unexpected alert detected: {e}")
         #     self.handle_unexpected_alert()
         #     pass
 

@@ -28,6 +28,11 @@ import re
 import time
 from App_Configs import App_Configs
 from Save_State import Save_State
+from Cloudwatch import Cloudwatch
+
+def logger():
+    pass
+logger = Cloudwatch.log
 
 def rng_wait():
     return random.uniform(0.1, 0.7)
@@ -35,9 +40,9 @@ def rng_wait():
 class Rater:
 
     def __init__(self, driver: WebDriver, **kwargs):
-        print("####################################################")
-        print("##########        Rater - init()         ##########")
-        print("####################################################")
+        logger("####################################################")
+        logger("##########        Rater - init()         ##########")
+        logger("####################################################")
         self.driver               = driver
         self.email                = App_Configs.init['EMAIL']
         self.pw                   = App_Configs.init['PWORD']
@@ -45,26 +50,26 @@ class Rater:
         self.rate_end_before      = App_Configs.init['RATE_BOT_END_BEFORE']
         self.rate_page            = App_Configs.init['RATE_PAGE']
 
-        print("     Rater - email           ", self.email)
-        print("     Rater - pw              ", self.pw)
-        print("     Rater - rate_start      ", self.rate_start)
-        print("     Rater - rate_end_before ", self.rate_end_before)
-        print("     Rater - rate_page       ", self.rate_page)
+        logger("     Rater - email           ", self.email)
+        logger("     Rater - pw              ", self.pw)
+        logger("     Rater - rate_start      ", self.rate_start)
+        logger("     Rater - rate_end_before ", self.rate_end_before)
+        logger("     Rater - rate_page       ", self.rate_page)
 
     def run(self):
-        print("##################################################")
-        print("##########        Rater - run()        ###########")
-        print("##################################################")
+        logger("##################################################")
+        logger("##########        Rater - run()        ###########")
+        logger("##################################################")
         start = App_Configs.rating_state['email_index_finished'] if App_Configs.rating_state['email_index_finished'] else self.rate_start
 
         for i in range (start, self.rate_end_before):  # Since we have the 'retry' code in attempt_callback(), we have to get from App_Configs
-            print(f'---------{i}--------')
+            logger(f'---------{i}--------')
             Utils.do_login(self.driver, self.email, self.pw, i)
             self.send_rate()
             App_Configs.rating_state['email_index_finished'] = i
             Save_State.update_state_file()
             self.driver.delete_all_cookies()
-        print("DONE!")
+        logger("DONE!")
 
     def send_rate(self):
         Utils.go_to_page_gaurdrails_age(self.driver, self.rate_page)
@@ -78,7 +83,7 @@ class Rater:
         # 2.A Leave if already rated
         rated_already_msg = self.driver.find_element(By.CSS_SELECTOR, ".ly_grade.retry")
         if rated_already_msg.value_of_css_property('display') == "block":
-            print("🧐 We already rated it apparently")
+            logger("🧐 We already rated it apparently")
             yes_btn = self.driver.find_element(By.CSS_SELECTOR, ".lnk_cncl[title='No']")
             yes_btn.click()
             return
@@ -86,6 +91,6 @@ class Rater:
         else:
             send_btn = self.driver.find_element(By.CSS_SELECTOR, ".grade_btn a[title='Send']")
             send_btn.click()
-        print("✅ Rated probably succesfully")
+        logger("✅ Rated probably succesfully")
         time.sleep(0.1)
         pass

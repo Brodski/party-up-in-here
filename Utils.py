@@ -3,6 +3,7 @@ from datetime import datetime
 import os
 import random
 import time
+from S3 import S3
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium.common.exceptions import UnexpectedAlertPresentException, NoAlertPresentException
 from selenium.webdriver import ActionChains
@@ -15,8 +16,12 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.alert import Alert
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from Cloudwatch import Cloudwatch
 
-from typing import List
+def logger():
+    pass
+logger = Cloudwatch.log
+
 
 class Utils:
     cookie_COPPA = {
@@ -49,7 +54,7 @@ class Utils:
         try:
             WebDriverWait(driver, timeout).until(EC.url_to_be(page_url))
         except:
-            print('Unfortunate, we must fill out the age form. Cookies didnt sneak in on time 😔')
+            logger('Unfortunate, we must fill out the age form. Cookies didnt sneak in on time 😔')
             if driver.current_url == "https://www.webtoons.com/en/age-gate?isLogin=true":
                 day = driver.find_element(By.CSS_SELECTOR, "input#_day")
                 day.send_keys("1")
@@ -66,7 +71,7 @@ class Utils:
                 submit.click()
                 
                 WebDriverWait(driver, 4).until(EC.url_to_be(page_url))
-                print("Age form complete")
+                logger("Age form complete")
 
     @classmethod
     def do_login(self, driver: WebDriver, email: str, pw: str, count: str):
@@ -84,7 +89,7 @@ class Utils:
         cookie_sess = driver.get_cookie("NEO_SES")
         current_url = driver.current_url
         if cookie_sess or current_url == "https://www.webtoons.com/en/":
-            print(f"We are already logged in")
+            logger(f"We are already logged in")
             return
 
         driver.add_cookie(self.cookie_COPPA)
@@ -122,16 +127,24 @@ class Utils:
         # Wait for the URL to change. The page is likely redirected 
         # alternatively we can use EC.staleness_of(element). Waits until element is gone. # WebDriverWait(driver, 10).until(EC.staleness_of(login_form))
         WebDriverWait(driver, 10).until(EC.url_changes("https://www.webtoons.com/member/login"))
-        print("LOGIN COMPLETE: ", email_w_count)
+        logger("LOGIN COMPLETE: ", email_w_count)
 
     @staticmethod
     def take_screenshot_err(browser: WebDriver):
         timestamp = datetime.now().strftime(r"%Y-%m-%d_%Hh%Mm%Ss") #'2024-07-16_05h12m10s'
-        screenshot_path = os.path.join("screenshots", f"error_{timestamp}.png")
+
+        # 1st screenshot, viewport
+        filename = f"error_{timestamp}.png"
+        screenshot_path = os.path.join("screenshots", filename)
         browser.get_screenshot_as_file(screenshot_path)
-        screenshot_path_full = os.path.join("screenshots", f"error_full_{timestamp}.png")
+        S3.upload_screenshot_to_s3(screenshot_path, filename)
+
+        # 2nd screenshot, full
+        filename2 = f"error_full_{timestamp}.png"
+        screenshot_path_full = os.path.join("screenshots", filename2)
         browser.get_full_page_screenshot_as_file(screenshot_path_full)
-        print(f"Took a screenshot @ {screenshot_path}")
+        S3.upload_screenshot_to_s3(screenshot_path_full, filename2)
+        logger(f"Took a screenshot @ {screenshot_path}")
 
     @staticmethod
     def handle_unexpected_alert(driver):

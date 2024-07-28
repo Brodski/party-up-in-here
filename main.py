@@ -17,6 +17,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.alert import Alert
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from dotenv import dotenv_values
 import argparse
 import os
 import re
@@ -30,14 +31,24 @@ import Liker
 import Rater
 from Utils import Utils
 from Save_State import Save_State
+from Cloudwatch import Cloudwatch
+from dotenv import load_dotenv
+
+load_dotenv()
+os.environ['AWS_ACCESS_KEY_ID'] = os.getenv('AWS_ACCESS_KEY_ID')
+os.environ['AWS_SECRET_ACCESS_KEY'] = os.getenv('AWS_SECRET_ACCESS_KEY')
+
+def logger():
+    pass
+logger = Cloudwatch.log
 
 def setup_browser_driver() -> WebDriver:
     options = Options()
     if App_Configs.init['SELENIUM_IS_HEADLESS'] == "True":
         options.add_argument('--headless')
         os.environ["MOZ_HEADLESS"] = "1"
-        
-
+    
+    options.binary_location = os.path.abspath(os.getenv('FIREFOX_PATH'))
     options.add_argument('--autoplay-policy=user-required') 
     options.add_argument("--width=1750")
     options.add_argument("--height=1080")
@@ -62,7 +73,6 @@ def setup_browser_driver() -> WebDriver:
 
     extension_path = os.path.abspath('extensions/stylus.xpi')
     options.profile = firefox_profile
-    # service = FirefoxService(executable_path=GeckoDriverManager().install())
     service = get_or_install_service()
 
 
@@ -131,11 +141,15 @@ def configure_stylus(browser: WebDriver):
     browser.switch_to.window(original_tab_handle)
     
     
-def get_or_install_service(retries=2, delay=3) -> FirefoxService:
-    service = FirefoxService(executable_path=GeckoDriverManager().install())
+def get_or_install_service(retries=3, delay=3) -> FirefoxService:
     for i in range(retries):
         try:
-            service = FirefoxService(executable_path=GeckoDriverManager().install())
+            executable_path=GeckoDriverManager().install()
+            logger("executable_path!?!?!", executable_path)
+            logger("os.path.exists(executable_path)???" , os.path.exists(executable_path))
+            
+            service = FirefoxService(executable_path=executable_path)
+            # service = FirefoxService(executable_path=GeckoDriverManager().install())
             # service = FirefoxService(executable_path=GeckoDriverManager(cache_manager=DriverCacheManager(valid_range=0)).install())
             return service
         except Exception as e:
@@ -179,22 +193,21 @@ def attempt_callback(action_class, fail_count=0):
             action_class.run()
             return
         except UnexpectedAlertPresentException as e:
-            print(f"Unexpected alert detected: {e}")
+            logger(f"Unexpected alert detected: {e}")
             Utils.handle_unexpected_alert(action_class.driver)
             continue
         except KeyboardInterrupt:
-            print("Caught KeyboardInterrupt, exiting gracefully")
+            logger("Caught KeyboardInterrupt, exiting gracefully")
             exit(1)
         except Exception as e:
             fail_count = fail_count + 1
             traceback.print_exc()
-            print(f"Failed. Trying again... (Exception name: {e.__class__.__name__})")
+            logger(f"Failed. Trying again... (Exception name: {e.__class__.__name__})")
             Utils.take_screenshot_err(action_class.driver) 
             if fail_count >= MAX_RETRY:
-                print(f"Failed after {fail_count} attempts. Ending. 🙀😫😵")
+                logger(f"Failed after {fail_count} attempts. Ending. 🙀😫😵")
 
 if __name__ == "__main__":
-
     conf_file = "zConfig_local.conf" # default
     parser = argparse.ArgumentParser()
     parser.add_argument('--files', type=str, help='file name at local directory')
@@ -203,17 +216,17 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.files == None:
-        print('\nNo file present in args. You need the flag: --file myfile.conf')
+        logger('\nNo file present in args. You need the flag: --file myfile.conf')
         exit(1)
     conf_file = str(args.files)
     App_Configs(conf_file)
     state_filename = App_Configs.prep_state_filename(conf_file)
     Save_State.init_state_file(state_filename)
     if is_current_configs_diff_from_previous_configs():
-        print("\n main() - Config file changed from last time. \n")
+        logger("\n main() - Config file changed from last time. \n")
         App_Configs.create_new_file(Save_State.save_state_file)
     else:
-        print("\n main() - Config file is the SAME from last time \n")
+        logger("\n main() - Config file is the SAME from last time \n")
         Save_State.state_into_app_configs()
 
     browser: WebDriver = setup_browser_driver()
@@ -232,15 +245,15 @@ if __name__ == "__main__":
             rater = Rater.Rater(browser)
             attempt_callback(rater)
     except Exception as e:
-        print("An error occurred :(")
-        print(f"{e}")
-        print(traceback.format_exc())
+        logger("An error occurred :(")
+        logger(f"{e}")
+        logger(traceback.format_exc())
         Utils.take_screenshot_err(browser)
 
     finally:
         if browser:
             browser.quit()
-    print("--- ENDING ---")
+    logger("--- ENDING ---")
 
 
 
